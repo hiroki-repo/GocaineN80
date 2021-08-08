@@ -631,7 +631,7 @@ return statue
 //if _z80_addr<0x8000{
 goto memoryioportlbl((_z80_addr<0x8000),0)
 *memory_wr_rom
-if rommode=0{
+if rommode=0 and bankwriteable(bankid,2)=0{
 return
 }
 if bankid=0{
@@ -1307,7 +1307,7 @@ vbismacs=0
 keytemp=keymap(wparam2kdku)
 if keytemp=0xFF{if interruptformtk=1{interruptformt=0:interruptformtk=0}:return}
 keyio((keytemp>>4)&0xF)|=1<<(keytemp&0xF)
-if wparam2=37 or wparam2=40{keytemp=0x86:keyio((keytemp>>4)&0xF)|=1<<(keytemp&0xF)}
+if wparam2kdku=37 or wparam2kdku=40{keytemp=0x86:keyio((keytemp>>4)&0xF)|=1<<(keytemp&0xF)}
 if interruptformtk=1{interruptformt=0:interruptformtk=0}
 return
 *keyup
@@ -1317,7 +1317,7 @@ functyper=1|(2<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=
 keytemp=keymap(wparam2kdku)
 if keytemp=0xFF{if interruptformtk=1{interruptformt=0:interruptformtk=0}:return}
 keyio((keytemp>>4)&0xF)^=1<<(keytemp&0xF)
-if wparam2=37 or wparam2=40{keytemp=0x86:keyio((keytemp>>4)&0xF)^=1<<(keytemp&0xF)}
+if wparam2kdku=37 or wparam2kdku=40{keytemp=0x86:keyio((keytemp>>4)&0xF)^=1<<(keytemp&0xF)}
 if interruptformtk=1{interruptformt=0:interruptformtk=0}
 return
 
