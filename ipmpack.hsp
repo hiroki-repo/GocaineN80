@@ -1,0 +1,1589 @@
+//ここからモジュールの開始です。
+
+#ifndef _ipmpack_@ipmpack
+
+#module "ipmpack"
+
+#define _ipmpack_
+
+;┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+;┃ [ ipmpack v1.050 ]
+;┃
+;┃このモジュールは
+;┃ VRAMを直接、FIRフィルタリング・カラーテーブル変換・カラーマトリックス変換
+;┃ HSV変換・HLS変換・グレースケール変換・RGB変換・加算・減算・乗算
+;┃ 除算・半透明合成・アルファチャンネル利用の半透明合成・コピー・アフィン変換
+;┃ 色数計算・ヒストグラム作成・メディアンフィルタ処理・メディアンカット・パレット減色
+;┃ kuwaharaフィルタ・エッジ保持フィルタ・ピクセル移動・誤差拡散法減色・組織ディザ法減色・細線化
+;┃を行うことが出来るようになるHSP3用のモジュールです。
+;┃
+;┃ 詳しい説明は付属のサンプルファイル・HSファイルを参照してください。
+;┃
+;┃[ placeark ]
+;┃ by natade
+;┃ url http://www.placeark.com/
+;┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * 文字列型
+ */
+#const vartype_str 2
+
+/**
+ * 実数型
+ */
+#define vartype_double 3
+
+/**
+ * 整数型
+ */
+#define vartype_int 4
+
+/**
+ * xdim
+ * メモリのアクセス保護を実行可能として変更します。
+ * 元のアイデアは、ちょくとさんです。
+ * コミット済みページ領域に対する実行、読み取り、書き込みの各アクセス権を有効にします。
+ * 「%2*4」とやっているのは、dimは32ビットの整数型なので、4バイトの大きさを持っているため。
+ * @param p1 配列を割り当てる変数名
+ * @param p2 要素の最大値
+ */
+#uselib "kernel32.dll"
+#func ipm_VirtualProtect "VirtualProtect" sptr,int,int,sptr
+#define PAGE_EXECUTE_READWRITE 0x40
+#define xdim(%1,%2) dim %1,%2:lpflOldProtect@ipmpack=0:ipm_VirtualProtect varptr(%1),%2*4,PAGE_EXECUTE_READWRITE,varptr(lpflOldProtect@ipmpack)
+
+/** 
+ * 二次元画像処理用のネイティブな関数を初期化
+ * callfuncの関数アドレスに指定できます。
+ */
+#deffunc ipmpackinit
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codefilter, 253
+	codefilter(  0) = $8b50ec83, $8b5c2454, $8b642444, $5368244c, $64245c8b, $8d575655
+	codefilter(  6) = $048d023c, $2444890b, $24848b6c, $00000084, $8948c88b, $8b2c2444
+	codefilter( 12) = $00982484, $e0c10000, $24448910, $24848b30, $0000009c, $e0c1f9d1
+	codefilter( 18) = $244c8910, $248c8b18, $00000088, $34244489, $a024848b, $8b000000
+	codefilter( 24) = $c1fed1f1, $ed3310e0, $24548949, $245c8910, $247c8914, $24748970
+	codefilter( 30) = $24448958, $7dfd3b38, $246c8906, $8bfd8b70, $3b7c2444, $89047ef8
+	codefilter( 36) = $39702444, $7d6c246c, $246c8904, $24ac8b6c, $00000080, $6c246c39
+	codefilter( 42) = $6c89047e, $ff336c24, $047dd73b, $10247c89, $10244439, $4489047e
+	codefilter( 48) = $df3b1024, $7c89067d, $df8b1424, $067edd3b, $14246c89, $bc8bdd8b
+	codefilter( 54) = $00009024, $75ff8500, $24948b10, $0000008c, $90249489, $8b000000
+	codefilter( 60) = $24bc83fa, $00000094, $8b0e7500, $008c2494, $94890000, $00009424
+	codefilter( 66) = $40448d00, $fce08303, $48244489, $9c249c89, $3b000000, $0f6c245c
+	codefilter( 72) = $0002858d, $f7d08b00, $245489da, $2bd58b5c, $af0f4ad3, $03da8bd0
+	codefilter( 78) = $8b68245c, $8d102454, $448d5204, $5c8b0118, $84896424, $0000a024
+	codefilter( 84) = $2bc68b00, $244489c1, $24848b28, $0000009c, $5489ca8b, $543b2424
+	codefilter( 90) = $8d0f7024, $0000021d, $2824548b, $d003f003, $a024848b, $89000000
+	codefilter( 96) = $8b202444, $2b182444, $892c2444, $891c2474, $893c2454, $eb402444
+	codefilter(102) = $24a48d07, $00000000, $3424448b, $3024548b, $78244489, $1824448b
+	codefilter(108) = $8489c103, $00009824, $24448b00, $2494893c, $00000084, $3824548b
+	codefilter(114) = $5489f633, $84897424, $00008824, $24443b00, $0e8f0f1c, $8b000001
+	codefilter(120) = $03402454, $245489d1, $24a48d44, $00000000, $4424548b, $9824943b
+	codefilter(126) = $0f000000, $0000d88f, $24848b00, $0000008c, $4489c72b, $848b4c24
+	codefilter(132) = $00009424, $89c72b00, $8b502444, $00982484, $c22b0000, $0106448d
+	codefilter(138) = $89b70c8d, $90542444, $a424bc83, $00000000, $8824bc8b, $8b000000
+	codefilter(144) = $7f850ff2, $8b000001, $3b102444, $8b047dd0, $8b0bebf0, $3b702444
+	codefilter(150) = $8d037cd0, $448bff70, $f83b1424, $01488d0f, $f88b0000, $8024ac8b
+	codefilter(156) = $8b000000, $8bc72bc5, $484c247c, $2444af0f, $76348d48, $b60fc603
+	codefilter(162) = $af0f1834, $74010f34, $b60f7424, $0f010374, $740131af, $b60f7824
+	codefilter(168) = $8b020344, $0f502474, $010e04af, $00842484, $83420000, $943b04c1
+	codefilter(174) = $00009824, $6d8e0f00, $8bffffff, $8b542474, $8b24244c, $009024bc
+	codefilter(180) = $848b0000, $00008824, $84894000, $00008824, $24443b00, $058e0f1c
+	codefilter(186) = $33ffffff, $247439f6, $89047d74, $8b742474, $05742444, $00008000
+	codefilter(192) = $3d10f8c1, $000000ff, $ffb8057e, $8b000000, $88202454, $7439ff42
+	codefilter(198) = $047d7824, $78247489, $7824448b, $00800005, $10f8c100, $0000ff3d
+	codefilter(204) = $b8057e00, $000000ff, $b4390288, $00008424, $89077d00, $008424b4
+	codefilter(210) = $848b0000, $00008424, $80000500, $f8c10000, $00ff3d10, $057e0000
+	codefilter(216) = $0000ffb8, $42884100, $03c28301, $20245489, $24244c89, $70244c3b
+	codefilter(222) = $fe228c0f, $748bffff, $848b5824, $00009c24, $24548b00, $244c8b10
+	codefilter(228) = $248c015c, $000000a0, $24848940, $0000009c, $6c24443b, $fdb68c0f
+	codefilter(234) = $5e5fffff, $c4835b5d, $448bc350, $f83b6c24, $feae8c0f, $788dffff
+	codefilter(240) = $fea6e9ff, $d285ffff, $f6330479, $543b0beb, $057c7c24, $7c24748b
+	codefilter(246) = $79ff854e, $e9ff3307, $fffffe8f, $8c0ffd3b, $fffffe87, $e9ff7d8d
+	codefilter(252) = $fffffe7f
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codergbtable, 74
+	codergbtable( 0) = $18244c8b, $1c24548b, $245c8b53, $6c8b5518, $8b561424, $031c2474
+	codergbtable( 6) = $57ce03dd, $1c245c89, $0679db85, $5c89db33, $da3b1c24, $da8b067e
+	codergbtable(12) = $1c245c89, $0279c985, $448bc933, $c83b3024, $c88b027e, $0279ed85
+	codergbtable(18) = $ea3bed33, $ea8b027e, $0279f685, $f03bf633, $f08b027e, $38247c83
+	codergbtable(24) = $247c8b00, $89047534, $8338247c, $003c247c, $7c890475, $548d3c24
+	codergbtable(30) = $e2830352, $0ff13bfc, $00009b8d, $48c62b00, $8bc2af0f, $6d548dfa
+	codergbtable(36) = $8bc20300, $03182454, $245489d0, $24548b20, $8ddff714, $2b021044
+	codergbtable(42) = $247c89ce, $2444892c, $244c8924, $7deb3b28, $247c8b53, $247c2b14
+	codergbtable(48) = $8bf38b18, $24448bc8, $ebf52b20, $00498d03, $0714b60f, $3c245c8b
+	codergbtable(54) = $1a14b60f, $38245c8b, $b60f1088, $b60fff51, $5c8b1a14, $50883424
+	codergbtable(60) = $11b60f01, $1a14b60f, $83025088, $c18303c0, $cc754e03, $1c245c8b
+	codergbtable(66) = $2c247c8b, $2424448b, $20247c01, $4cffc703, $44892824, $95752424
+	codergbtable(72) = $5b5d5e5f, $000000c3
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codehsv, 179
+	codehsv(  0) = $83ec8b55, $458b18ec, $1c4d8b18, $5320558b, $5603d26b, $5710758b
+	codehsv(  6) = $03147d8b, $85cf03c6, $107589c0, $4589df8b, $83047d14, $8b001465
+	codehsv( 12) = $45392045, $89037e14, $c9851445, $c933027d, $3b24458b, $8b027ec8
+	codehsv( 18) = $7df685c8, $10658304, $20758b00, $7e107539, $10758903, $027dff85
+	codehsv( 24) = $d83bdb33, $d88b027e, $7403c2f6, $04c28306, $3bfce283, $4c8d0fd9
+	codehsv( 30) = $8b000002, $c32b207d, $f71c5589, $0f481c5d, $558bc2af, $0c450310
+	codehsv( 36) = $8d03d26b, $2b010244, $f44589cb, $8bf04d89, $4d39144d, $0a8d0f10
+	codehsv( 42) = $8b000002, $08458bf0, $2b0c452b, $4589104d, $f84d89ec, $458b03eb
+	codehsv( 48) = $0fc603ec, $0f0148b6, $d13b10b6, $ff58b60f, $89244d89, $5d89fc55
+	codehsv( 54) = $204d8918, $5589037e, $205d3b20, $5d89037e, $8bd13b20, $8b027dc1
+	codehsv( 60) = $7dd83bc2, $8bc38b02, $d82b205d, $458b1475, $204d8b30, $0104b60f
+	codehsv( 66) = $46880688, $0194e9ff, $4d390000, $0200b920, $18750000, $452bc28b
+	codehsv( 72) = $00c06918, $990000f0, $558bfbf7, $03f88bfc, $0affc1f9, $75205539
+	codehsv( 78) = $18458b19, $6924452b, $00f000c0, $fbf79900, $f903f88b, $830affc1
+	codehsv( 84) = $458b78c7, $18453b20, $458b1c75, $fc452b24, $f000c069, $f7990000
+	codehsv( 90) = $03f88bfb, $0affc1f9, $00f0c781, $c38b0000, $9908e0c1, $85207df7
+	codehsv( 96) = $33027dc0, $00ffb9c0, $c13b0000, $c18b027e, $0f2c4d8b, $8b081cb6
+	codehsv(102) = $458b204d, $04b60f30, $287d0301, $000168b9, $89f93b00, $4589fc5d
+	codehsv(108) = $8b0c7c20, $f98b99c7, $458bfff7, $85fa8b20, $8b0e7dff, $f98b99c7
+	codehsv(114) = $458bfff7, $8bd10320, $0fdb85fa, $ffff2f84, $8b3c6aff, $f75999c7
+	codehsv(120) = $8b3c6af9, $3cc96bc8, $8be84589, $c1c12bc7, $59990ae0, $ffb9f9f7
+	codehsv(126) = $2b000000, $4daf0fcb, $18458920, $0f18558b, $c281d3af, $00000200
+	codehsv(132) = $8b0afac1, $00ffbada, $d32b0000, $2055af0f, $000400bb, $185d2b00
+	codehsv(138) = $000080b8, $5daf0f00, $03c803fc, $00c381d0, $83000002, $fbc17fc0
+	codehsv(144) = $0fc32b0a, $8b2045af, $8005e85d, $c1000000, $fac108f9, $08f8c108
+	codehsv(150) = $0575db85, $eb20558a, $01fb8308, $458a0d75, $01568820, $4e880688
+	codehsv(156) = $8336ebff, $0a7502fb, $8a014e88, $0e88204d, $fb8319eb, $88077503
+	codehsv(162) = $1688014e, $fb830aeb, $750e8804, $0146880b, $8820458a, $09ebff46
+	codehsv(168) = $8820458a, $4688ff56, $03c68301, $0ff84dff, $fffe0985, $f4458bff
+	codehsv(174) = $ff1c4503, $4589f04d, $d8850ff4, $5ffffffd, $c3c95b5e
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codehls, 214
+	codehls(  0) = $83ec8b55, $458b20ec, $1c4d8b18, $5320558b, $5603d26b, $5710758b
+	codehls(  6) = $03147d8b, $85cf03c6, $fc7589c0, $4589df8b, $83047df8, $8b00f865
+	codehls( 12) = $45392045, $89037ef8, $c985f845, $c933027d, $3b24458b, $8b027ec8
+	codehls( 18) = $7df685c8, $fc658304, $20758b00, $7efc7539, $fc758903, $027dff85
+	codehls( 24) = $d83bdb33, $d88b027e, $7403c2f6, $04c28306, $3bfce283, $c58d0fd9
+	codehls( 30) = $8b000000, $c32b207d, $f71c5589, $0f481c5d, $558bc2af, $0c4503fc
+	codehls( 36) = $8d03d26b, $2b010244, $ec4589cb, $8be84d89, $5539f855, $868d0ffc
+	codehls( 42) = $8b000000, $4d2b084d, $1045890c, $452bc28b, $e44d89fc, $ebf04589
+	codehls( 48) = $e44d8b03, $0310458b, $51b60fc8, $01b60f01, $b60fc23b, $5589ff49
+	codehls( 54) = $f4458914, $89244d89, $037e2055, $3b204589, $037e204d, $3b204d89
+	codehls( 60) = $185589c2, $4589037d, $184d3b18, $4d89037d, $205d8b18, $0318758b
+	codehls( 66) = $e07589f3, $5d2bfed1, $8b327518, $b60f2c45, $4d8b0604, $01418810
+	codehls( 72) = $41880188, $104583ff, $f04dff03, $458b9375, $1c4503ec, $89e84dff
+	codehls( 78) = $850fec45, $ffffff5f, $c95b5e5f, $205539c3, $c12b1c75, $f000c069
+	codehls( 84) = $f7990000, $0200b9fb, $f88b0000, $03f4458b, $0affc1f9, $00b905eb
+	codehls( 90) = $39000002, $19752045, $2b24458b, $c0691445, $0000f000, $8bfbf799
+	codehls( 96) = $c1f903f8, $c7830aff, $20458b78, $7524453b, $14458b1c, $69f4452b
+	codehls(102) = $00f000c0, $fbf79900, $f903f88b, $810affc1, $0000f0c7, $69c38b00
+	codehls(108) = $0000ffc0, $80fe8100, $7f000000, $99c60308, $ebe07df7, $01feb914
+	codehls(114) = $4d2b0000, $204d2b18, $fad1d18b, $f799c203, $287d03f9, $8b2c4d8b
+	codehls(120) = $b60f3055, $b60f0e0c, $68bb1034, $3b000001, $8b097cfb, $fb8b99c7
+	codehls(126) = $fa8bfff7, $0b7dff85, $8b99c78b, $03fff7fb, $85fa8bd3, $8b1075f6
+	codehls(132) = $48881045, $88088801, $06e9ff48, $81ffffff, $000080f9, $8d157f00
+	codehls(138) = $0000ff86, $c1af0f00, $00ffbe99, $fef70000, $14ebf08b, $af0fc68b
+	codehls(144) = $ffbb99c1, $f7000000, $03f02bfb, $69c383f1, $578dc903, $3bce2b78
+	codehls(150) = $2b027cd3, $b4fa81d3, $7d000000, $3cfa8313, $c68b097d, $af0fc12b
+	codehls(156) = $891bebc2, $26eb1475, $00f0fa81, $1b7d0000, $f0bbc68b, $2b000000
+	codehls(162) = $0fda2bc1, $6a99c3af, $fbf75b3c, $4589c103, $8903eb14, $ff81144d
+	codehls(168) = $000000b4, $ff83127d, $8b097d3c, $0fc12bc6, $16ebc7af, $20ebde8b
+	codehls(174) = $0000f0ba, $7dfa3b00, $2bc68b15, $0fd72bc1, $3c6ac2af, $fbf75b99
+	codehls(180) = $d903d88b, $d98b02eb, $8588578d, $81067dd2, $000168c2, $b4fa8100
+	codehls(186) = $7d000000, $3cfa830e, $297dc68b, $af0fc12b, $8116ebc2, $0000f0fa
+	codehls(192) = $8b187d00, $00f0bec6, $c12b0000, $af0ff22b, $3c6a99c6, $03fef75e
+	codehls(198) = $8b02ebc1, $144d8bc1, $0000ffbe, $7ece3b00, $104d8b09, $ff0141c6
+	codehls(204) = $558b08eb, $014a8810, $de3bca8b, $01c6057e, $8802ebff, $0fc63b19
+	codehls(210) = $fffdd58e, $ff41c6ff, $fdcfe9ff, $0000ffff
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codegrayscale, 86
+	codegrayscale( 0) = $1424448b, $18244c8b, $1c24548b, $245c8b53, $8b565510, $571c2474
+	codegrayscale( 6) = $03033c8d, $247c89ce, $79ff851c, $2444c70c, $0000001c, $247c8b00
+	codegrayscale(12) = $7efa3b1c, $24548906, $85fa8b1c, $330279c9, $24448bc9, $7ec83b30
+	codegrayscale(18) = $85c88b02, $330279db, $7eda3bdb, $85da8b02, $330279f6, $7ef03bf6
+	codegrayscale(24) = $83f08b02, $0038247c, $6c8b0875, $6c893424, $7c833824, $75003c24
+	codegrayscale(30) = $246c8b08, $246c8934, $52548d3c, $fce28303, $8d0ff13b, $000000c1
+	codegrayscale(36) = $0f48c62b, $ea8bc2af, $035b148d, $24548bc2, $89d00314, $8b202454
+	codegrayscale(42) = $f7182454, $10448ddd, $89ce2b01, $892c246c, $89242444, $9028244c
+	codegrayscale(48) = $757ddf3b, $18246c8b, $14246c2b, $20244c8b, $fb2bf08b, $a48d0aeb
+	codegrayscale(54) = $00000024, $00498d00, $0241b60f, $0151b60f, $4c85c069, $d2690000
+	codegrayscale(60) = $0000962c, $b60fc203, $4fd26911, $8d00001d, $80001084, $548b0000
+	codegrayscale(66) = $f8c13424, $14b60f10, $01568810, $3824548b, $1014b60f, $548b1688
+	codegrayscale(72) = $048a3c24, $29048810, $8303c183, $754f03c6, $247c8baf, $246c8b1c
+	codegrayscale(78) = $24448b2c, $246c0124, $ffc50320, $8928244c, $0f242444, $ffff6f85
+	codegrayscale(84) = $5d5e5fff, $0000c35b
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codergbmatrix, 127
+	codergbmatrix(  0) = $8b10ec83, $8b242444, $53282454, $246c8b55, $748b5628, $8b573824
+	codergbmatrix(  6) = $8d2c247c, $db33070c, $7c89d503, $4c891024, $cb3b3024, $5c89067d
+	codergbmatrix( 12) = $cb8b3024, $067ece3b, $30247489, $d33bce8b, $d233027d, $4024448b
+	codergbmatrix( 18) = $027ed03b, $fb3bd08b, $5c89067d, $fb8b1024, $067efe3b, $10247489
+	codergbmatrix( 24) = $ed85fe8b, $ed330279, $027ee83b, $5c8de88b, $e3830376, $0fea3bfc
+	codergbmatrix( 30) = $0001778d, $48c52b00, $8bc3af0f, $7f1c8df3, $5c8bc303, $d8032824
+	codergbmatrix( 36) = $38245c89, $24245c8b, $448ddef7, $d52b0118, $3c244489, $4424448b
+	codergbmatrix( 42) = $1c247489, $14245489, $8d0ff93b, $0000012a, $3824548b, $3c246c8b
+	codergbmatrix( 48) = $34245489, $2824548b, $2424542b, $5489cf2b, $4c891824, $08eb4024
+	codergbmatrix( 54) = $0024a48d, $90000000, $ff4db60f, $0075b60f, $8b04508b, $af0f0858
+	codergbmatrix( 60) = $7db60fd6, $d9af0f01, $188bd303, $8ddfaf0f, $80001a94, $588b0000
+	codergbmatrix( 66) = $10fac10c, $89dfaf0f, $8b2c2454, $af0f1050, $8bd303d6, $af0f1458
+	codergbmatrix( 72) = $1a948dd9, $00008000, $0f1c588b, $708bdeaf, $f7af0f18, $708bde03
+	codergbmatrix( 78) = $f1af0f20, $00338c8d, $c1000080, $f9c110fa, $247c8310, $14740048
+	codergbmatrix( 84) = $4824748b, $7401368b, $748b2c24, $56034824, $084e0304, $2c247c83
+	codergbmatrix( 90) = $33047d00, $8115ebdb, $ff2c247c, $7e000000, $00ffbb07, $04eb0000
+	codergbmatrix( 96) = $2c245c8a, $0479d285, $0debd233, $00fffa81, $057e0000, $0000ffba
+	codergbmatrix(102) = $79c98500, $ebc93304, $fff9810d, $7e000000, $00ffb905, $748b0000
+	codergbmatrix(108) = $5e883424, $24748b02, $2e148818, $3424548b, $c2830a88, $03c58303
+	codergbmatrix(114) = $40244cff, $34245489, $ff0a850f, $4c8bffff, $7c8b3024, $748b1024
+	codergbmatrix(120) = $74011c24, $74013824, $4cff3c24, $850f1424, $fffffebc, $5b5d5e5f
+	codergbmatrix(126) = $c310c483
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codeadd, 52
+	codeadd( 0) = $1424448b, $18244c8b, $245c8b53, $748b5620, $8b571824, $8d18247c
+	codeadd( 6) = $ce030714, $0279d285, $d33bd233, $d38b027e, $0279c985, $448bc933
+	codeadd(12) = $c83b2c24, $c88b027e, $0279ff85, $fb3bff33, $fb8b027e, $0279f685
+	codeadd(18) = $f03bf633, $f08b027e, $148dd72b, $24548952, $5b548d1c, $fce28303
+	codeadd(24) = $677df13b, $0f48c62b, $da8bc2af, $8b55dbf7, $8934246c, $0324245c
+	codeadd(30) = $7f1c8dc5, $ce2bd803, $1c244c89, $2024748b, $3474f685, $14247c8b
+	codeadd(36) = $1824548b, $cb8bfd2b, $9b8dd52b, $00000000, $0f04b60f, $0329b60f
+	codeadd(42) = $00ff3dc5, $057e0000, $0000ffb8, $0a048800, $e4754e41, $34246c8b
+	codeadd(48) = $24245c03, $1c244cff, $5f5dba75, $00c35b5e
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codesub, 51
+	codesub( 0) = $1424448b, $18244c8b, $245c8b53, $748b5620, $8b571824, $8d18247c
+	codesub( 6) = $ce030714, $0279d285, $d33bd233, $d38b027e, $0279c985, $448bc933
+	codesub(12) = $c83b2c24, $c88b027e, $0279ff85, $fb3bff33, $fb8b027e, $0279f685
+	codesub(18) = $f03bf633, $f08b027e, $148dd72b, $24548952, $5b548d1c, $fce28303
+	codesub(24) = $617df13b, $0f48c62b, $8b55c2af, $0334246c, $8dda8bc5, $dbf77f3c
+	codesub(30) = $ce2bf803, $24245c89, $1c244c89, $2024748b, $3074f685, $14245c8b
+	codesub(36) = $1824548b, $c78bdd2b, $9b8dd52b, $00000000, $030cb60f, $2b28b60f
+	codesub(42) = $330279cd, $020c88c9, $ec754e40, $34246c8b, $24245c8b, $4cfffb03
+	codesub(48) = $c0751c24, $5b5e5f5d, $000000c3
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codemul, 54
+	codemul( 0) = $1424448b, $18244c8b, $245c8b53, $748b5620, $8b571824, $8d18247c
+	codemul( 6) = $ce030714, $0279d285, $d33bd233, $d38b027e, $0279c985, $448bc933
+	codemul(12) = $c83b2c24, $c88b027e, $0279ff85, $fb3bff33, $fb8b027e, $0279f685
+	codemul(18) = $f03bf633, $f08b027e, $148dd72b, $24548952, $5b548d1c, $fce28303
+	codemul(24) = $6e7df13b, $0f48c62b, $da8bc2af, $8b55dbf7, $8934246c, $0324245c
+	codemul(30) = $7f1c8dc5, $ce2bd803, $1c244c89, $2024748b, $3b74f685, $14247c8b
+	codemul(36) = $1824548b, $cb8bfd2b, $9b8dd52b, $00000000, $0f04b60f, $c129b60f
+	codemul(42) = $af0f08e0, $10f8c1c5, $0000ff3d, $b8057e00, $000000ff, $410a0488
+	codemul(48) = $8bdd754e, $0334246c, $ff24245c, $751c244c, $5e5f5db3, $0000c35b
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codediv, 58
+	codediv( 0) = $1424448b, $18244c8b, $245c8b53, $748b5620, $8b571824, $8d18247c
+	codediv( 6) = $ce030714, $0279d285, $d33bd233, $d38b027e, $0279c985, $448bc933
+	codediv(12) = $c83b2c24, $c88b027e, $0279ff85, $fb3bff33, $fb8b027e, $0279f685
+	codediv(18) = $f03bf633, $f08b027e, $148dd72b, $24548952, $5b548d20, $fce28303
+	codediv(24) = $7d7df13b, $0f48c62b, $8b55c2af, $24548bea, $8dc20334, $ddf77f1c
+	codediv(30) = $ce2bd803, $28246c89, $20244c89, $2424448b, $1c244489, $4874c085
+	codediv(36) = $14247c8b, $1824748b, $cb8bfa2b, $ff8bf22b, $d284118a, $04c60675
+	codediv(42) = $16ebff0e, $0f04b60f, $0f08e0c1, $f799eab6, $7fc083fd, $8808f8c1
+	codediv(48) = $448b0e04, $41481c24, $1c244489, $d075c085, $3424548b, $28246c8b
+	codediv(54) = $4cffdd03, $a4752024, $5b5e5f5d, $000000c3
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codetransparent, 56
+	codetransparent( 0) = $1424448b, $1824548b, $245c8b53, $6c8b5510, $57562424, $20247c8b
+	codetransparent( 6) = $03030c8d, $79c985d7, $3bc93302, $8b027ecd, $79d285cd, $8bd23302
+	codetransparent(12) = $3b302444, $8b027ed0, $79db85d0, $3bdb3302, $8b027edd, $79ff85dd
+	codetransparent(18) = $3bff3302, $8b027ef8, $8dcb2bf8, $4c8d4934, $e183036d, $247489fc
+	codetransparent(24) = $7dfa3b24, $48c72b76, $8bc1af0f, $5b0c8de9, $14245c8b, $ddf7c303
+	codetransparent(30) = $d72bc803, $28246c89, $1c244c89, $20245489, $4374f685, $34247c8b
+	codetransparent(36) = $18246c8b, $c18bfb2b, $9b8deb2b, $00000000, $b60f088a, $b60f0714
+	codetransparent(42) = $0fd32bd9, $382454af, $c180ea83, $d10208fa, $40281488, $8be1754e
+	codetransparent(48) = $8b242474, $8b14245c, $8b1c244c, $0328246c, $244cffcd, $244c8920
+	codetransparent(54) = $5fad751c, $c35b5d5e
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codealphachannel, 64
+	codealphachannel( 0) = $1424448b, $18244c8b, $245c8b53, $55c30310, $24246c8b, $24748b56
+	codealphachannel( 6) = $148d571c, $3302790e, $7ec53bc0, $85c58b02, $330279d2, $244c8bd2
+	codealphachannel(12) = $7ed13b30, $85d18b02, $330279db, $7edd3bdb, $85dd8b02, $330279f6
+	codealphachannel(18) = $7ef13bf6, $2bf18b02, $403c8dc3, $036d448d, $89fce083, $3b2c247c
+	codealphachannel(24) = $938d0ff2, $2b000000, $af0f49ce, $8de88bc8, $5c8b5b04, $cb031424
+	codealphachannel(30) = $c103ddf7, $748bd62b, $6c893824, $44893024, $54891c24, $ff8b2024
+	codealphachannel(36) = $5a74ff85, $34246c8b, $18244c8b, $f32bee2b, $7489cb2b, $4c892424
+	codealphachannel(42) = $08eb2824, $0024648d, $2424748b, $f003088a, $2e14b60f, $0f36b60f
+	codealphachannel(48) = $d32bd9b6, $83d6af0f, $fac180ea, $8bd10208, $8828244c, $4f400114
+	codealphachannel(54) = $748bd675, $5c8b3824, $7c8b1424, $448b2c24, $6c8b1c24, $c5033024
+	codealphachannel(60) = $20244cff, $1c244489, $5e5f9675, $00c35b5d
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codecolorcount, 68
+	codecolorcount( 0) = $8bec8b55, $4d8b1845, $20558b1c, $00186583, $5303d26b, $10758b56
+	codecolorcount( 6) = $147d8b57, $cf03c603, $7589c085, $89df8b10, $047d1445, $00146583
+	codecolorcount(12) = $3920458b, $037e1445, $85144589, $33027dc9, $24458bc9, $027ec83b
+	codecolorcount(18) = $f685c88b, $6583047d, $758b0010, $10753920, $7589037e, $7dff8510
+	codecolorcount(24) = $3bdb3302, $8b027ed8, $03c2f6d8, $c2830674, $fce28304, $8d0fd93b
+	codecolorcount(30) = $00000087, $5589c32b, $205df720, $c2af0f48, $0310558b, $d26b0845
+	codecolorcount(36) = $02448d03, $89cb2b01, $4d891c45, $145d8b24, $7d105d39, $105d2b50
+	codecolorcount(42) = $b60ff08b, $c033014e, $8aff668a, $08e0c106, $f88bc10b, $0007e781
+	codecolorcount(48) = $05798000, $f8cf834f, $284d8b47, $07e28399, $f8c1c203, $03d23303
+	codecolorcount(54) = $cf8b42c1, $088ae2d3, $0b75d184, $cf8b01b2, $1008e2d2, $831845ff
+	codecolorcount(60) = $754b03c6, $1c458bb5, $ff204503, $4589244d, $8b9a751c, $4d8b0c45
+	codecolorcount(66) = $895e5f18, $c35d5b08
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codehistograph, 55
+	codehistograph( 0) = $51ec8b55, $8b18458b, $8b531c4d, $8b56205d, $8b571075, $c603147d
+	codehistograph( 6) = $cf03d38b, $8503d26b, $107589c0, $7d144589, $14658304, $145d3900
+	codehistograph(12) = $5d89037e, $7dc98514, $8bc93302, $c83b2445, $c88b027e, $047df685
+	codehistograph(18) = $00106583, $7e105d39, $105d8903, $047dff85, $02ebf633, $f03bf78b
+	codehistograph(24) = $f08b027e, $7403c2f6, $04c28306, $3bfce283, $8b617df1, $f7c62bda
+	codehistograph(30) = $af0f48db, $10558bc2, $6b084503, $ce2b03d2, $01027c8d, $8b184d89
+	codehistograph(36) = $55391455, $2b367d10, $cf8b1055, $0141b60f, $ff71b60f, $2845af0f
+	codehistograph(42) = $3075af0f, $b60fc603, $75af0f31, $30848d2c, $00008000, $c10c758b
+	codehistograph(48) = $048d10f8, $8300ff86, $754a03c1, $fffb03cf, $bb75184d, $c95b5e5f
+	codehistograph(54) = $000000c3
+
+	//compile by Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codemedianfilter, 304
+	codemedianfilter(  0) = $8b58ec83, $8b682444, $00802494, $8b530000, $009c249c, $8b550000
+	codemedianfilter(  6) = $896c246c, $030c2444, $56782444, $7824748b, $24448957, $24848b7c
+	codemedianfilter( 12) = $0000008c, $ffd1fa8b, $7c89c88b, $788d2424, $c2af0fff, $60244489
+	codemedianfilter( 18) = $7c89c003, $7a8d3c24, $89c003ff, $008024bc, $f5030000, $d1833c8d
+	codemedianfilter( 24) = $87048df9, $10246c89, $18247489, $34244c89, $74244489, $0c79f685
+	codemedianfilter( 30) = $182444c7, $00000000, $1824748b, $8424948b, $3b000000, $89047ef2
+	codemedianfilter( 36) = $83182454, $007c247c, $44c7087d, $00007c24, $948b0000, $00008824
+	codemedianfilter( 42) = $24543900, $89047e7c, $337c2454, $7dee3bf6, $24748904, $24ac8b10
+	codemedianfilter( 48) = $00000084, $10246c39, $6c89047e, $74391024, $067d7824, $14247489
+	codemedianfilter( 54) = $748b04eb, $f23b1424, $5489067e, $f28b1424, $9824ac8b, $85000000
+	codemedianfilter( 60) = $8b0e75ed, $009424ac, $ac890000, $00009824, $24bc8300, $0000009c
+	codemedianfilter( 66) = $8b0e7500, $00942494, $94890000, $00009c24, $24948b00, $00000084
+	codemedianfilter( 72) = $0352548d, $89fce283, $00902494, $b4890000, $00008c24, $24743b00
+	codemedianfilter( 78) = $778d0f7c, $f7000003, $245489da, $24948b64, $00000088, $0f4ad62b
+	codemedianfilter( 84) = $902494af, $8b000000, $24548bf2, $24740310, $52148d70, $0132548d
+	codemedianfilter( 90) = $20245489, $2424548b, $8024942b, $89000000, $eb382454, $00498d03
+	codemedianfilter( 96) = $1024548b, $80249489, $3b000000, $0f182454, $0003018d, $24948b00
+	codemedianfilter(102) = $0000008c, $2424748b, $7489f203, $748b2c24, $f2033824, $2024548b
+	codemedianfilter(108) = $30245489, $542bd18b, $74893c24, $54894024, $8c034424, $00008024
+	codemedianfilter(114) = $89f63300, $8b28244c, $8940244c, $891c2474, $3b78244c, $0f2c244c
+	codemedianfilter(120) = $0001558f, $24948b00, $00000080, $44245403, $48245489, $08eb0eeb
+	codemedianfilter(126) = $0024a48d, $90000000, $4824548b, $2824543b, $01198f0f, $4c8d0000
+	codemedianfilter(132) = $b48b00b5, $00009424, $89f52b00, $8b502474, $009c24b4, $f52b0000
+	codemedianfilter(138) = $4c247489, $f52bf78b, $c52bdd2b, $54247489, $58245c89, $5c244489
+	codemedianfilter(144) = $a424bc83, $00000000, $78245c8b, $2975f28b, $1024448b, $047dd03b
+	codemedianfilter(150) = $0bebf08b, $1824448b, $037cd03b, $8bff708d, $3b142444, $8b047dd8
+	codemedianfilter(156) = $8b32ebd8, $eb7c2444, $79d28525, $ebf63304, $24848b0e, $00000084
+	codemedianfilter(162) = $037cd03b, $85ff708d, $330479db, $8b0eebdb, $00882484, $d83b0000
+	codemedianfilter(168) = $588d037c, $24848bff, $00000088, $4c246c8b, $0f48c32b, $902484af
+	codemedianfilter(174) = $8d000000, $c6037634, $6c24748b, $301cb60f, $0674b60f, $1caf0f02
+	codemedianfilter(180) = $246c8b29, $34af0f50, $8bde0329, $0f6c2474, $010674b6, $0331af0f
+	codemedianfilter(186) = $24748bde, $0e1c8954, $1c24748b, $58245c8b, $8b0b3489, $895c245c
+	codemedianfilter(192) = $42460b04, $8904c183, $3b1c2474, $0f282454, $ffff2b8e, $249c8bff
+	codemedianfilter(198) = $000000a8, $9824ac8b, $8b000000, $8b742444, $4178244c, $78244c89
+	codemedianfilter(204) = $2c244c3b, $fec68e0f, $548bffff, $80c76024, $00000800, $00000000
+	codemedianfilter(210) = $000001b9, $00908900, $eb000010, $244c8b08, $24448b78, $4c894974
+	codemedianfilter(216) = $c9037824, $b48bc903, $00080001, $01848b00, $00001000, $54244489
+	codemedianfilter(222) = $58244c89, $c603c88b, $d1c22b99, $87048bf8, $5c247489, $0024648d
+	codemedianfilter(228) = $7db70439, $04394606, $39fa7cb7, $067e8f04, $8f043949, $f13bfa7f
+	codemedianfilter(234) = $148b2e7f, $245489b7, $8f148b1c, $8bb71489, $891c2454, $148b8f14
+	codemedianfilter(240) = $245489b3, $8b148b1c, $8bb31489, $891c2454, $49468b14, $b87ef13b
+	codemedianfilter(246) = $5c24548b, $7424448b, $1d7dd13b, $58246c8b, $782444ff, $00289489
+	codemedianfilter(252) = $89000008, $1000288c, $ac8b0000, $00009824, $244c8b00, $7df13b54
+	codemedianfilter(258) = $24548b1a, $03d20378, $2444ffd2, $02b48978, $00000800, $00028c89
+	codemedianfilter(264) = $83000010, $0078247c, $ff278f0f, $b48bffff, $0000a024, $b3048b00
+	codemedianfilter(270) = $74244c8b, $8b81148b, $0f6c2444, $8b1014b6, $88302444, $148bff50
+	codemedianfilter(276) = $91148bb3, $6c244c8b, $0a54b60f, $8b108801, $748bb314, $148b7424
+	codemedianfilter(282) = $0a4c8a96, $01488802, $34244c8b, $8903c083, $8b302444, $00802484
+	codemedianfilter(288) = $3b400000, $89182444, $00802484, $c68b0000, $fd2c8c0f, $548bffff
+	codemedianfilter(294) = $54016424, $84ff2024, $00008c24, $24548b00, $2494397c, $0000008c
+	codemedianfilter(300) = $fcca8c0f, $5e5fffff, $c4835b5d, $0000c358
+
+	//compile by Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codemediancut, 369
+	codemediancut(  0) = $83ec8b55, $4d8b38ec, $10458b14, $5324558b, $7d8b5756, $0f1c8d0c
+	codemediancut(  6) = $6b1c4d8b, $4d8903c9, $0c458914, $b9184503, $00000100, $89fc7d89
+	codemediancut( 12) = $d13bcc55, $4d89037e, $34558bcc, $0300b28d, $75890000, $00b28de8
+	codemediancut( 18) = $89000004, $8a8dec75, $00000100, $0500b28d, $4d890000, $e47589d4
+	codemediancut( 24) = $0279db85, $5d3bdb33, $8b037e1c, $c0851c5d, $c0330279, $3b20758b
+	codemediancut( 30) = $8b027ec6, $79ff85c6, $fc658304, $1c7d8b00, $7efc7d39, $fc7d8903
+	codemediancut( 36) = $00107d83, $6583047d, $7539000c, $89037e0c, $7d8b0c75, $03c78314
+	codemediancut( 42) = $89fce783, $4539147d, $2b787d0c, $dff70c75, $75af0f4e, $08750314
+	codemediancut( 48) = $8b247d89, $ff6bfc7d, $37748d03, $10758901, $752bf08b, $1875890c
+	codemediancut( 54) = $7dfc5d39, $10758b43, $8b1c7589, $fc752bf3, $8b147589, $b60f1c7d
+	codemediancut( 60) = $b60f0177, $f8e6833f, $c1f8e783, $f70b05e6, $0f1c7d8b, $83ff7fb6
+	codemediancut( 66) = $c1031c45, $efc102e6, $8bf70b03, $348d2c7d, $ff06ffb7, $cb75144d
+	codemediancut( 72) = $0124758b, $4dff1075, $2bad7518, $5d2b0c45, $e8758bfc, $0fe47d8b
+	codemediancut( 78) = $02c6c3af, $2001c600, $020082c6, $c6000000, $758b2006, $0006c6ec
+	codemediancut( 84) = $8b2007c6, $0789307d, $8940c033, $4539fc45, $fb8e0fcc, $83000002
+	codemediancut( 90) = $7d8904c7, $00ba8d20, $89000002, $7d8b187d, $184d29e8, $7d89f92b
+	codemediancut( 96) = $e47d8bf8, $29145589, $7589144d, $244d2924, $418df92b, $f47d8901
+	codemediancut(102) = $4d8b09eb, $34558bd4, $33ec758b, $c85d89db, $89d05d89, $5d391c5d
+	codemediancut(108) = $888e0ffc, $8b000000, $fe2be47d, $8bf07d89, $fe2be87d, $8de07d89
+	codemediancut(114) = $000200ba, $0c4d8900, $890c7529, $7529d87d, $105589d8, $89107529
+	codemediancut(120) = $ce8bd075, $0f10758b, $8b0e3cb6, $b60f0c75, $f72b0e34, $0fe07d8b
+	codemediancut(126) = $890f3cb6, $758bdc75, $34b60fd8, $8bfe2b0e, $af0fdc75, $dc7589f7
+	codemediancut(132) = $0ff0758b, $0f0e3cb6, $fe2b31b6, $0fdc758b, $7539f7af, $8b067dc8
+	codemediancut(138) = $75891c5d, $1c45ffc8, $411c758b, $7cfc753b, $d44d8bab, $8dd05d89
+	codemediancut(144) = $b60f0b3c, $130c8d37, $0fe04d89, $c28109b6, $00000200, $4d8bf12b
+	codemediancut(150) = $03cb03e8, $11b60fda, $0fdc5d89, $d32b1bb6, $89e45d8b, $558b1055
+	codemediancut(156) = $03da03d0, $5d89ec55, $1ab60ff0, $8bd85589, $b60ff055, $89d32b12
+	codemediancut(162) = $fe831c55, $830f7f01, $7f01107d, $01fa8309, $01bb8e0f, $db330000
+	codemediancut(168) = $9d0ff23b, $3bd233c3, $9d0f1075, $74da85c2, $e0558b3e, $d112b60f
+	codemediancut(174) = $8bd603fe, $14881475, $8b1f8a06, $18881875, $558b1788, $88128adc
+	codemediancut(180) = $118a0614, $88f8758b, $558b0614, $8b128ad8, $5d8b2475, $061488f4
+	codemediancut(186) = $8af0758b, $8b77eb16, $558b1075, $7cf23b1c, $dc558b2b, $d112b60f
+	codemediancut(192) = $8bd603fe, $14881875, $8b198a06, $1c88f875, $14758b06, $558b1188
+	codemediancut(198) = $88128ae0, $178a0614, $b6eb1088, $0fd8758b, $5d8b36b6, $03fad1f4
+	codemediancut(204) = $24758bd6, $8b061488, $5589f075, $88168a1c, $558a0314, $145d8b1c
+	codemediancut(210) = $558b1688, $88128ae0, $178a0314, $88185d8b, $dc558b10, $1488128a
+	codemediancut(216) = $8b118a03, $1488f85d, $205d8b03, $8314558b, $b60f0023, $55890214
+	codemediancut(222) = $8b6aeb0c, $b60f1855, $55890214, $8b4feb10, $b60f2455, $55890214
+	codemediancut(228) = $f4558b1c, $0214b60f, $7d1c5539, $0c758b36, $e6c1138b, $10750b05
+	codemediancut(234) = $8905e6c1, $03ebc875, $0bc8758b, $5d8b1c75, $b314032c, $8b205d8b
+	codemediancut(240) = $45fff475, $0f13891c, $390634b6, $e07c1c75, $fff0758b, $558b1045
+	codemediancut(246) = $14b60ff8, $10553902, $45ffa57c, $10b60f0c, $7c0c5539, $305d8b8e
+	codemediancut(252) = $8dd0558b, $5d8b9314, $291b8b20, $8b3e751a, $1b8b205d, $558b1a89
+	codemediancut(258) = $02148a14, $88e05d8b, $88108a13, $18558b17, $8b02148a, $1788dc7d
+	codemediancut(264) = $8af8558b, $11880214, $8a244d8b, $558b010c, $8b0a88d8, $0c8af44d
+	codemediancut(270) = $eb0e8801, $204d8b10, $74003983, $fc45ff08, $20458340, $fc4d8b04
+	codemediancut(276) = $0fcc4d3b, $fffd418c, $ec758bff, $8b34558b, $7d83d44d, $8e0f00fc
+	codemediancut(282) = $00000151, $89305d8b, $5d8b345d, $305d2b28, $0200828d, $5d890000
+	codemediancut(288) = $e85d8bdc, $29305589, $558b3045, $89d82be4, $4529144d, $18758914
+	codemediancut(294) = $2b184529, $8bf88bd0, $5d89fc45, $205589d4, $ebd04589, $d45d8b06
+	codemediancut(300) = $8b20558b, $b60f3075, $75893e34, $14758b0c, $3e34b60f, $c033c933
+	codemediancut(306) = $89244d89, $7539d875, $858d0f0c, $0f000000, $893b34b6, $b60fcc75
+	codemediancut(312) = $10758937, $7dcc753b, $34b60f68, $185d8b3a, $3b1cb60f, $3b1c5d89
+	codemediancut(318) = $8b4b7dde, $e2c10c55, $10550b05, $8905e2c1, $03ebc855, $0bc8558b
+	codemediancut(324) = $758b1c55, $96148b2c, $af0ff28b, $048d0c75, $0ff28bf0, $0f1c55af
+	codemediancut(330) = $ff1075af, $0c8d1c45, $24758bf1, $89d6148d, $558b2455, $34b60f20
+	codemediancut(336) = $1c75393a, $45ffc67c, $105d8b10, $7ccc5d3b, $0c45ff9c, $3b0c758b
+	codemediancut(342) = $827cd875, $8b34558b, $04e0c11a, $8bfbf799, $c1c18bf0, $f79904e0
+	codemediancut(348) = $04fec1fb, $458bc88b, $04e0c124, $bafbf799, $000000ff, $c104f9c1
+	codemediancut(354) = $f23b04f8, $f28b027e, $027eca3b, $c23bca8b, $c28b027e, $0b08e6c1
+	codemediancut(360) = $344d8bf1, $04344583, $0b08e6c1, $dc458bf0, $d04dff47, $0f083489
+	codemediancut(366) = $fffef085, $5b5e5fff, $0000c3c9
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codepallet, 94
+	codepallet( 0) = $83ec8b55, $458b18ec, $1c4d8b18, $5320558b, $5603d26b, $5710758b
+	codepallet( 6) = $03147d8b, $85cf03c6, $107589c0, $4589df8b, $83047d14, $8b001465
+	codepallet(12) = $45392045, $89037e14, $c9851445, $c933027d, $3b24458b, $8b027ec8
+	codepallet(18) = $7df685c8, $10658304, $20758b00, $7e107539, $10758903, $027dff85
+	codepallet(24) = $d83bdb33, $d88b027e, $7403c2f6, $04c28306, $3bfce283, $f78d0fd9
+	codepallet(30) = $89000000, $5df71855, $48c32b18, $8bc2af0f, $d26b1055, $8bc20303
+	codepallet(36) = $d0030c55, $8b1c5589, $448d0855, $cb2b0110, $89244589, $5d8bf04d
+	codepallet(42) = $105d3914, $00ae8d0f, $458b0000, $247d8b1c, $8bf44589, $452b0c45
+	codepallet(48) = $105d2b08, $33e84589, $284539c0, $c7204589, $0000fc45, $45890006
+	codepallet(54) = $8b547ef8, $4d8b2c45, $880c8b20, $0157b60f, $8937b60f, $b60fec4d
+	codepallet(60) = $d02bee45, $2bc5b60f, $47b60ff0, $ffe181ff, $2b000000, $c0af0fc1
+	codepallet(66) = $af0fce8b, $8bc103ce, $caaf0fca, $453bc103, $89097dfc, $458bfc45
+	codepallet(72) = $f8458920, $8b2045ff, $453b2045, $8bac7c28, $458bf84d, $f4758b2c
+	codepallet(78) = $8de8558b, $488a8804, $024e8802, $f9c1088b, $3a0c8808, $0688008a
+	codepallet(84) = $8303c683, $894b03c7, $850ff475, $ffffff67, $0118458b, $45011c45
+	codepallet(90) = $f04dff24, $ff34850f, $5e5fffff, $00c3c95b
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codekuwaharafilter2, 242
+	codekuwaharafilter2(  0) = $246c8d55, $30b4b8b4, $00e80000, $8b000000, $458b644d, $8b565360
+	codekuwaharafilter2(  6) = $ce035c75, $89404589, $4d8b484d, $8bc10368, $4589744d, $6c458b68
+	codekuwaharafilter2( 12) = $5703c06b, $3b5a206a, $384589ca, $8978458b, $027e3c75, $c23bca8b
+	codekuwaharafilter2( 18) = $c28b027e, $89ff798d, $788de87d, $e47d89ff, $8bfe798d, $307d89d8
+	codekuwaharafilter2( 24) = $0ffe788d, $d18bc1af, $fbd1fad1, $4d39c933, $0c558948, $89285d89
+	codekuwaharafilter2( 30) = $45892c7d, $89037d34, $458b484d, $4845396c, $4589037e, $684d3948
+	codekuwaharafilter2( 36) = $4d89037d, $707d8b68, $7e687d39, $687d8903, $f13bc933, $4d89037d
+	codekuwaharafilter2( 42) = $3c45393c, $4589037e, $604d393c, $4d89037d, $407d3940, $7d89037e
+	codekuwaharafilter2( 48) = $38458b40, $097403a8, $8304c083, $4589fce0, $40458b38, $8968453b
+	codekuwaharafilter2( 54) = $8d0f7445, $000002df, $8b384d8b, $f82b6c75, $f73c458b, $03c06bd9
+	codekuwaharafilter2( 60) = $7daf0f4f, $587d0338, $8dec4d89, $8b013844, $45896c7d, $3c458b1c
+	codekuwaharafilter2( 66) = $8948453b, $8d0f6445, $00000296, $891c458b, $c9334445, $eb784d89
+	codekuwaharafilter2( 72) = $0c558b06, $8b285d8b, $c13b7845, $f28b0c75, $8b30752b, $2c7d2bfb
+	codekuwaharafilter2( 78) = $f8832aeb, $8b087501, $348d3045, $83eceb10, $077502f8, $752bf28b
+	codekuwaharafilter2( 84) = $830beb30, $127503f8, $8d30458b, $458b1034, $183c8d2c, $03647503
+	codekuwaharafilter2( 90) = $c78b747d, $89e4452b, $c73b604d, $89144d89, $4d89104d, $20458918
+	codekuwaharafilter2( 96) = $00d08f0f, $ce8b0000, $89e84d2b, $03eb244d, $3b244d8b, $5c4d89ce
+	codekuwaharafilter2(102) = $00ac8f0f, $7d830000, $558b007c, $75d88b5c, $3c4d8b25, $047dd13b
+	codekuwaharafilter2(108) = $0bebd18b, $39484d8b, $037c5c4d, $3bff518d, $057d4045, $eb405d8b
+	codekuwaharafilter2(114) = $684d8b2c, $7d8320eb, $047d005c, $0bebd233, $396c4d8b, $037c5c4d
+	codekuwaharafilter2(120) = $85ff518d, $33047dc0, $8b0aebdb, $c13b704d, $598d037c, $704d8bff
+	codekuwaharafilter2(126) = $8b03d26b, $cb2b5445, $49605d8b, $384daf0f, $b60fca03, $01020854
+	codekuwaharafilter2(132) = $94891455, $ffdf989d, $54b60fff, $b60f0108, $5501010c, $184d0110
+	codekuwaharafilter2(138) = $ff6045ff, $75395c45, $89c38b5c, $cf98858c, $458bffff, $9d948920
+	codekuwaharafilter2(144) = $ffffef98, $ff548e0f, $3b40ffff, $204589c7, $ff3a8e0f, $458bffff
+	codekuwaharafilter2(150) = $7df79914, $784d8b34, $8b0cc96b, $10458bd8, $347df799, $b40d5c89
+	codekuwaharafilter2(156) = $89f05d89, $458bf445, $7df79918, $f4558b34, $b80d5489, $bc0d4489
+	codekuwaharafilter2(162) = $8bf84589, $c88b7845, $8d02e1c1, $33fc0d44, $344d39c9, $89244589
+	codekuwaharafilter2(168) = $604d8908, $4d89517e, $605d8b5c, $8bf8558b, $4d8bf445, $02e3c1f0
+	codekuwaharafilter2(174) = $981d842b, $2bffffef, $df981d8c, $942bffff, $ffcf981d, $ac4589ff
+	codekuwaharafilter2(180) = $8bc0af0f, $daaf0fda, $c18bd803, $03c1af0f, $c3035c45, $8b6045ff
+	codekuwaharafilter2(186) = $4d3b604d, $5c458934, $4d8bb77c, $ff018924, $c9337845, $04787d83
+	codekuwaharafilter2(192) = $fe1b8c0f, $458bffff, $08453bfc, $0ffc558b, $c033c19c, $0f04553b
+	codekuwaharafilter2(198) = $d233c09c, $458bc823, $fc453900, $85c29c0f, $8a1374ca, $458bb44d
+	codekuwaharafilter2(204) = $01488844, $88b84d8a, $bc4d8a08, $c93350eb, $8b08453b, $9c0f0445
+	codekuwaharafilter2(210) = $39d233c1, $9c0f0045, $74ca85c2, $c04d8a13, $8844458b, $4d8a0148
+	codekuwaharafilter2(216) = $8a0888c4, $26ebc84d, $8b08453b, $107d4445, $88cc4d8a, $4d8a0148
+	codekuwaharafilter2(222) = $8a0888d0, $0eebd44d, $88d84d8a, $4d8a0148, $8a0888dc, $4583e04d
+	codekuwaharafilter2(228) = $45ff0344, $0c558b64, $88285d8b, $458bff48, $48453b64, $fd708c0f
+	codekuwaharafilter2(234) = $458bffff, $1c4501ec, $8b7445ff, $45396845, $468c0f74, $5ffffffd
+	codekuwaharafilter2(240) = $c5835b5e, $00c3c94c
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 12.00.8804 for 80x86
+	xdim codekuwaharafilter, 426
+	codekuwaharafilter(  0) = $b8ec8b55, $000030e0, $000000e8, $10458b00, $ef6c8589, $458bffff
+	codekuwaharafilter(  6) = $9c458914, $0310458b, $45891845, $14458b98, $891c4503, $458bdc45
+	codekuwaharafilter( 12) = $20858910, $8bffffcf, $45891445, $20458bec, $8903c06b, $ffcf2485
+	codekuwaharafilter( 18) = $24458bff, $8bf04589, $45892845, $2c458bd4, $ef748589, $7d83ffff
+	codekuwaharafilter( 24) = $077e20d4, $20d445c7, $83000000, $ffef74bd, $0a7e20ff, $ef7485c7
+	codekuwaharafilter( 30) = $0020ffff, $458b0000, $89f8d1d4, $ffcf2c85, $74858bff, $d1ffffef
+	codekuwaharafilter( 36) = $e44589f8, $48d4458b, $cf288589, $858bffff, $ffffef74, $e0458948
+	codekuwaharafilter( 42) = $48d4458b, $30858948, $8bffffcf, $ffef7485, $894848ff, $458bf845
+	codekuwaharafilter( 48) = $85af0fd4, $ffffef74, $83fc4589, $7d00987d, $98658304, $98458b00
+	codekuwaharafilter( 54) = $7e20453b, $20458b06, $83984589, $7d00dc7d, $dc658304, $dc458b00
+	codekuwaharafilter( 60) = $7e24453b, $24458b06, $83dc4589, $ffef6cbd, $077d00ff, $ef6ca583
+	codekuwaharafilter( 66) = $8b00ffff, $ffef6c85, $20453bff, $458b097e, $6c858920, $83ffffef
+	codekuwaharafilter( 72) = $7d009c7d, $9c658304, $9c458b00, $7e24453b, $24458b06, $8b9c4589
+	codekuwaharafilter( 78) = $ffcf2485, $03e083ff, $1d74c085, $cf24858b, $c083ffff, $24858904
+	codekuwaharafilter( 84) = $8bffffcf, $ffcf2485, $89fc24ff, $ffcf2485, $9c458bff, $ebec4589
+	codekuwaharafilter( 90) = $ec458b07, $ec458940, $3bec458b, $8d0fdc45, $0000052a, $2bf0458b
+	codekuwaharafilter( 96) = $af0fec45, $ffcf2485, $6c8d8bff, $6bffffef, $958b03c9, $ffffcf24
+	codekuwaharafilter(102) = $c22bd12b, $cf5c8589, $858bffff, $ffffef6c, $cf208589, $0debffff
+	codekuwaharafilter(108) = $cf20858b, $8940ffff, $ffcf2085, $20858bff, $3bffffcf, $8d0f9845
+	codekuwaharafilter(114) = $000004d5, $cf64a583, $eb00ffff, $64858b0d, $40ffffcf, $cf648589
+	codekuwaharafilter(120) = $bd83ffff, $ffffcf64, $748d0f04, $83000003, $ffcf64bd, $177500ff
+	codekuwaharafilter(126) = $cf20858b, $8589ffff, $ffffef68, $89ec458b, $ffef7085, $8370ebff
+	codekuwaharafilter(132) = $ffcf64bd, $1d7501ff, $cf20858b, $8503ffff, $ffffcf28, $ef688589
+	codekuwaharafilter(138) = $458bffff, $708589ec, $ebffffef, $64bd834a, $02ffffcf, $858b1a75
+	codekuwaharafilter(144) = $ffffcf20, $ef688589, $458bffff, $e04503ec, $ef708589, $27ebffff
+	codekuwaharafilter(150) = $cf64bd83, $7503ffff, $20858b1e, $03ffffcf, $ffcf2885, $688589ff
+	codekuwaharafilter(156) = $8bffffef, $4503ec45, $708589e0, $83ffffef, $8300a065, $8300d865
+	codekuwaharafilter(162) = $ffef78a5, $658300ff, $858b0088, $ffffef70, $89e0452b, $07ebe845
+	codekuwaharafilter(168) = $40e8458b, $8be84589, $853be845, $ffffef70, $019f8f0f, $858b0000
+	codekuwaharafilter(174) = $ffffef68, $cf28852b, $4589ffff, $8b07ebf4, $8940f445, $458bf445
+	codekuwaharafilter(180) = $68853bf4, $0fffffef, $0001738f, $f4458b00, $cf608589, $458bffff
+	codekuwaharafilter(186) = $588589e8, $83ffffcf, $7500307d, $60858b5e, $3bffffcf, $ffef6c85
+	codekuwaharafilter(192) = $8b0e7dff, $ffef6c85, $608589ff, $ebffffcf, $60858b15, $3bffffcf
+	codekuwaharafilter(198) = $0a7c9845, $4898458b, $cf608589, $858bffff, $ffffcf58, $7d9c453b
+	codekuwaharafilter(204) = $9c458b0b, $cf588589, $15ebffff, $cf58858b, $453bffff, $8b0a7cdc
+	codekuwaharafilter(210) = $8948dc45, $ffcf5885, $834eebff, $ffcf60bd, $097d00ff, $cf60a583
+	codekuwaharafilter(216) = $eb00ffff, $60858b15, $3bffffcf, $0a7c2045, $4820458b, $cf608589
+	codekuwaharafilter(222) = $bd83ffff, $ffffcf58, $83097d00, $ffcf58a5, $15eb00ff, $cf58858b
+	codekuwaharafilter(228) = $453bffff, $8b0a7c24, $89482445, $ffcf5885, $f0458bff, $cf58852b
+	codekuwaharafilter(234) = $af0fffff, $ffcf2485, $608d8bff, $6bffffcf, $958b03c9, $ffffcf24
+	codekuwaharafilter(240) = $c22bd12b, $cf548589, $458bffff, $54850308, $0fffffcf, $8b0240b6
+	codekuwaharafilter(246) = $8489a04d, $ffcf688d, $a0458bff, $03d84d8b, $cf68858c, $4d89ffff
+	codekuwaharafilter(252) = $08458bd8, $cf548503, $b60fffff, $4d8b0140, $8d8489a0, $ffffef88
+	codekuwaharafilter(258) = $8ba0458b, $ffef788d, $858c03ff, $ffffef88, $ef788d89, $458bffff
+	codekuwaharafilter(264) = $54850308, $0fffffcf, $4d8b00b6, $8d8489a0, $ffffdf68, $8ba0458b
+	codekuwaharafilter(270) = $8c03884d, $ffdf6885, $884d89ff, $40a0458b, $e9a04589, $fffffe77
+	codekuwaharafilter(276) = $fffe4be9, $d8458bff, $fc7df799, $ef7c8589, $858bffff, $ffffef78
+	codekuwaharafilter(282) = $fc7df799, $ef808589, $458bffff, $7df79988, $848589fc, $8bffffef
+	codekuwaharafilter(288) = $ffcf6485, $03c06bff, $ef7c8d8b, $4c89ffff, $858ba485, $ffffcf64
+	codekuwaharafilter(294) = $8b03c06b, $ffef808d, $854c89ff, $64858ba8, $6bffffcf, $8d8b03c0
+	codekuwaharafilter(300) = $ffffef84, $ac854c89, $cf64858b, $8d8bffff, $ffffcf64, $44858c89
+	codekuwaharafilter(306) = $8bffffcf, $ffcf6485, $85a483ff, $ffffcf34, $a0658300, $8b07eb00
+	codekuwaharafilter(312) = $8940a045, $458ba045, $fc453ba0, $458b707d, $7c8d8ba0, $2bffffef
+	codekuwaharafilter(318) = $cf68858c, $4d89ffff, $a0458b8c, $ef808d8b, $8c2bffff, $ffef8885
+	codekuwaharafilter(324) = $904d89ff, $8ba0458b, $ffef848d, $858c2bff, $ffffdf68, $8b944d89
+	codekuwaharafilter(330) = $af0f8c45, $4d8b8c45, $4daf0f90, $8bc10390, $af0f944d, $c103944d
+	codekuwaharafilter(336) = $cf648d8b, $8c8bffff, $ffcf348d, $8bc803ff, $ffcf6485, $858c89ff
+	codekuwaharafilter(342) = $ffffcf34, $72e981eb, $8bfffffc, $ffcf3485, $3bc933ff, $ffcf3885
+	codekuwaharafilter(348) = $c19c0fff, $cf34858b, $d233ffff, $cf3c853b, $9c0fffff, $8bca23c2
+	codekuwaharafilter(354) = $ffcf3485, $3bd233ff, $ffcf4085, $c29c0fff, $c985ca23, $458b3174
+	codekuwaharafilter(360) = $5c85030c, $8affffcf, $4888a44d, $0c458b02, $cf5c8503, $4d8affff
+	codekuwaharafilter(366) = $014888a8, $030c458b, $ffcf5c85, $ac4d8aff, $bee90888, $8b000000
+	codekuwaharafilter(372) = $ffcf3885, $3bc933ff, $ffcf3c85, $c19c0fff, $cf38858b, $d233ffff
+	codekuwaharafilter(378) = $cf40853b, $9c0fffff, $85ca23c2, $8b2e74c9, $85030c45, $ffffcf5c
+	codekuwaharafilter(384) = $88b04d8a, $458b0248, $5c85030c, $8affffcf, $4888b44d, $0c458b01
+	codekuwaharafilter(390) = $cf5c8503, $4d8affff, $eb0888b8, $3c858b68, $3bffffcf, $ffcf4085
+	codekuwaharafilter(396) = $8b2e7dff, $85030c45, $ffffcf5c, $88bc4d8a, $458b0248, $5c85030c
+	codekuwaharafilter(402) = $8affffcf, $4888c04d, $0c458b01, $cf5c8503, $4d8affff, $eb0888c4
+	codekuwaharafilter(408) = $0c458b2c, $cf5c8503, $4d8affff, $024888c8, $030c458b, $ffcf5c85
+	codekuwaharafilter(414) = $cc4d8aff, $8b014888, $85030c45, $ffffcf5c, $88d04d8a, $5c858b08
+	codekuwaharafilter(420) = $83ffffcf, $858903c0, $ffffcf5c, $fffb0fe9, $fac3e9ff, $c3c9ffff
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codepixelmove, 179
+	codepixelmove(  0) = $83ec8b55, $458b30ec, $18558b10, $53144d8b, $58758b56, $8d03f66b
+	codepixelmove(  6) = $558b101c, $89d1031c, $558b1455, $d8758920, $8b03d26b, $75894875
+	codepixelmove( 12) = $4c758b48, $347d8b57, $8b4c7589, $e7c13075, $10e6c110, $7d89db85
+	codepixelmove( 18) = $207d8bec, $89104589, $5d89fc4d, $f45589f8, $7df07589, $f8658306
+	codepixelmove( 24) = $3b07eb00, $89037edf, $7d83f87d, $5d8b0014, $83067d24, $eb001465
+	codepixelmove( 30) = $145d3908, $5d89037e, $7dc08514, $10658306, $3b07eb00, $89037ec7
+	codepixelmove( 36) = $c985107d, $6583067d, $07eb00fc, $037ecb3b, $f6fc5d89, $097403c2
+	codepixelmove( 42) = $8304c283, $5589fce2, $fc458bf4, $8914453b, $8d0f3045, $00000206
+	codepixelmove( 48) = $2b5c458b, $4d8bfc5d, $c96b4010, $d0458903, $f7c2af0f, $af0f4bd8
+	codepixelmove( 54) = $8bd903da, $45890c4d, $345d89d4, $8948558b, $558b2055, $1855894c
+	codepixelmove( 60) = $3b10558b, $fb8bf855, $0f1c5589, $0001a28d, $60458b00, $8904e083
+	codepixelmove( 66) = $458be845, $7cc63b20, $fef79905, $c08509eb, $f799087d, $89d603fe
+	codepixelmove( 72) = $758b2055, $18458bec, $057cc63b, $ebfef799, $7dc08509, $fef79908
+	codepixelmove( 78) = $5589d603, $20458b18, $c128558b, $348b10f8, $18458b82, $4075af0f
+	codepixelmove( 84) = $c12c558b, $148b10f8, $55af0f82, $00c68144, $81000080, $008000c2
+	codepixelmove( 90) = $10fec100, $c11c7503, $550310fa, $10753b30, $758b057d, $8b0aeb10
+	codepixelmove( 96) = $f03bf845, $708d037c, $fc553bff, $558b057d, $8b0aebfc, $d03b1445
+	codepixelmove(102) = $508d037c, $24458bff, $2b03f66b, $af0f48c2, $c603f445, $00e87d83
+	codepixelmove(108) = $b60f4674, $89023954, $b60fe455, $89013954, $b60fe055, $748d0f14
+	codepixelmove(114) = $55890201, $88168adc, $8d023954, $8a010154, $395c881a, $8ac10301
+	codepixelmove(120) = $0f1c8818, $88e45d8a, $e05d8a1e, $558a1a88, $345d8bdc, $7eeb1088
+	codepixelmove(126) = $016045f6, $45f63d74, $16740260, $0239548a, $02015488, $0139548a
+	codepixelmove(132) = $01015488, $880f148a, $558b0814, $10548a08, $39548802, $08558b02
+	codepixelmove(138) = $0110548a, $01395488, $8a08558b, $04881004, $f63beb0f, $74026045
+	codepixelmove(144) = $01548a16, $39548802, $01548a02, $39548801, $08148a01, $8b0f1488
+	codepixelmove(150) = $548a0855, $54880217, $558b0201, $17548a08, $01548801, $08558b01
+	codepixelmove(156) = $8817148a, $458b0814, $20450138, $013c458b, $458b1845, $f0758bd8
+	codepixelmove(162) = $0303c083, $58458bf8, $1c450140, $3b1c458b, $8c0ff845, $fffffe6a
+	codepixelmove(168) = $8bd4458b, $55015055, $54558b48, $8b4c5501, $55033055, $3bd803d0
+	codepixelmove(174) = $55891455, $345d8930, $fe1e8c0f, $5e5fffff, $00c3c95b
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codediffusion, 222
+	codediffusion(  0) = $83ec8b55, $458b3cec, $18558b10, $53144d8b, $10348d56, $571c558b
+	codediffusion(  6) = $8b113c8d, $da8b2055, $8503db6b, $104589f6, $89f84d89, $7d89fc75
+	codediffusion( 12) = $e05d891c, $6583047d, $553900fc, $89037efc, $ff85fc55, $6583047d
+	codediffusion( 18) = $7d8b001c, $1c7d3924, $7d89037e, $7dc0851c, $10658304, $10553900
+	codediffusion( 24) = $5589037e, $7dc98510, $f8658304, $f87d3900, $7d89037e, $03c3f6f8
+	codediffusion( 30) = $c3830974, $fce38304, $8be05d89, $553bf855, $878d0f1c, $8b000000
+	codediffusion( 36) = $c78b1075, $2b03f66b, $ff508dc2, $03d3af0f, $048d0855, $fffffc85
+	codediffusion( 42) = $16548dff, $c3af0f01, $89404503, $558b1855, $0cd26b10, $0402448d
+	codediffusion( 48) = $8b144589, $5d891c45, $205df720, $c96bcb8b, $f8452bfc, $39fc558b
+	codediffusion( 54) = $2e7d1055, $8bfc7d8b, $758b1855, $107d2b14, $015ab60f, $0f045e89
+	codediffusion( 60) = $1e891ab6, $ff5ab60f, $83fc5e89, $c68303c2, $e4754f0c, $8be05d8b
+	codediffusion( 66) = $558b247d, $144d0120, $48185501, $458bbe75, $f0658338, $8bc08500
+	codediffusion( 72) = $2b7e344d, $8b30758b, $02e2c1d1, $85184589, $8b157ec9, $144d89c6
+	codediffusion( 78) = $7d01388b, $04c083f0, $75144dff, $247d8bf3, $4dfff203, $8be07518
+	codediffusion( 84) = $f7993c45, $03d12bf9, $5589fc55, $f8558bd0, $891c553b, $8d0fe855
+	codediffusion( 90) = $00000205, $8b10758b, $03f66bc7, $508dc22b, $d3af0fff, $8d0c5503
+	codediffusion( 96) = $fffc8504, $548dffff, $af0f0116, $10758bc3, $8b0cf66b, $fcc96bcb
+	codediffusion(102) = $f7205d89, $4503205d, $c44d8940, $0406448d, $89d85589, $458bdc45
+	codediffusion(108) = $fc453b10, $0fec4589, $0001998d, $dc4d8b00, $33f45589, $284539c0
+	codediffusion(114) = $c7184589, $00001445, $45890006, $8b507ee4, $558b2c45, $90148b18
+	codediffusion(120) = $8904798b, $b60fd455, $f82bd645, $dff70279, $b60f318b, $79f02bc6
+	codediffusion(126) = $8bdef702, $e281fc41, $000000ff, $0279c22b, $c603d8f7, $453bc703
+	codediffusion(132) = $89097d14, $458b1445, $e4458918, $8b1845ff, $453b1845, $8bb07c28
+	codediffusion(138) = $458be455, $f4758b2c, $03f44583, $8a90048d, $56880250, $c1108b01
+	codediffusion(144) = $168808fa, $5688108a, $ec558bff, $3b0cc183, $4d89d055, $e98f0fc8
+	codediffusion(150) = $8b000000, $04798b00, $4589318b, $55b60f14, $0ffa2b16, $f22bd4b6
+	codediffusion(156) = $8bd47589, $ff25fc71, $2b000000, $39c033f0, $75893845, $184589cc
+	codediffusion(162) = $00b68e0f, $65830000, $7d830014, $8e0f0034, $00000098, $03e8558b
+	codediffusion(168) = $e44589c2, $00187d83, $7d830c75, $06750014, $893c458b, $458b1445
+	codediffusion(174) = $3c452b14, $3bec4503, $617c1045, $39f8558b, $597ce455, $391c558b
+	codediffusion(180) = $517de455, $6b244d8b, $4d2b03c0, $30558be4, $cbaf0f49, $458bc803
+	codediffusion(186) = $45af0f18, $14450334, $8de05d8b, $068b8234, $99c7af0f, $8bf07df7
+	codediffusion(192) = $44014055, $068b088a, $d445af0f, $998a0c8d, $01f07df7, $068b0441
+	codediffusion(198) = $cc45af0f, $f07df799, $4d8b0101, $1445ffc8, $3b14458b, $8c0f3445
+	codediffusion(204) = $ffffff70, $4018458b, $8938453b, $8c0f1845, $ffffff4a, $8bec45ff
+	codediffusion(210) = $453bec45, $708c0ffc, $8bfffffe, $45ffc44d, $d8558be8, $8b205503
+	codediffusion(216) = $4d01e845, $1c453bdc, $0fd85589, $fffe3d8c, $5b5e5fff, $0000c3c9
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codeordered, 196
+	codeordered(  0) = $83ec8b55, $4d8b50ec, $10558b1c, $5318458b, $56205d8b, $5714758b
+	codeordered(  6) = $030e3c8d, $6bcb8bc2, $558903c9, $107589fc, $89f84589, $c0851c7d
+	codeordered( 12) = $65830479, $5d3900f8, $89037ef8, $ff85f85d, $65830479, $458b001c
+	codeordered( 18) = $1c453924, $4589037e, $3bff331c, $89037dd7, $5d39fc7d, $89037efc
+	codeordered( 24) = $f73bfc5d, $7d89037d, $10453910, $4589037e, $38558b10, $8303c183
+	codeordered( 30) = $7d89fce1, $7ed73b24, $34758b35, $8b307d8b, $02e3c1de, $89147d89
+	codeordered( 36) = $f6852055, $7d8b187e, $18758914, $5539178b, $89037d24, $c7832455
+	codeordered( 42) = $184dff04, $5d01ee75, $204dff14, $558bdc75, $f4558910, $0f1c553b
+	codeordered( 48) = $0002468d, $89c22b00, $5df7c44d, $af0f48c4, $fc4d8bc1, $d26bd18b
+	codeordered( 54) = $8bc20303, $d0030c55, $8bc05589, $448d0855, $45890110, $8b03ebbc
+	codeordered( 60) = $4d89fc4d, $f84d3b18, $01f58d0f, $458b0000, $7df799f4, $c0458b38
+	codeordered( 66) = $89bc7d8b, $458bc845, $55af0f0c, $08452b38, $89b85589, $c033b445
+	codeordered( 72) = $d233c933, $c7d04589, $ffff2045, $45897fff, $e84d89d8, $89d44589
+	codeordered( 78) = $45c7cc45, $fffffe14, $e455897f, $89e04589, $4589dc45, $28453910
+	codeordered( 84) = $00d78e0f, $4d8b0000, $2c458b10, $8b88048b, $baf08bc8, $000000ff
+	codeordered( 90) = $4589c223, $47b60fec, $10f9c101, $c12bca23, $2308fec1, $17b60ff2
+	codeordered( 96) = $0ff04589, $2bff47b6, $d62bec45, $003c7d83, $75b05589, $0fd88b12
+	codeordered(102) = $af0fd2af, $f0458bd8, $af0fda03, $9919ebc0, $458bd88b, $2bda33b0
+	codeordered(108) = $c23399da, $d803c22b, $99f0458b, $c22bc233, $5d3bd803, $8b4e7d14
+	codeordered(114) = $d83b2045, $4589327d, $d0458b14, $8bcc4589, $4589d845, $e8458be4
+	codeordered(120) = $8be04589, $4589d445, $10458bdc, $8bd04589, $5d89ec45, $d84d8920
+	codeordered(126) = $89e87589, $15ebd445, $8910458b, $458bcc45, $145d89ec, $89e44d89
+	codeordered(132) = $4589e075, $1045ffdc, $3b10458b, $8c0f2845, $ffffff32, $8be84d8b
+	codeordered(138) = $458be455, $14758be0, $bb207503, $7fffffff, $027ef33b, $d269f38b
+	codeordered(144) = $0000012b, $024bc069, $c9690000, $0000024b, $558bc203, $72d26bdc
+	codeordered(150) = $558bc203, $2bd269d8, $03000001, $d4558bca, $0372d26b, $8bc83bca
+	codeordered(156) = $7e991845, $347df71f, $0f14458b, $8b2445af, $fef799ca, $8bb84d03
+	codeordered(162) = $d2333075, $0f8e0439, $1debc29e, $8b347df7, $af0f2045, $ca8b2445
+	codeordered(168) = $03fef799, $758bb84d, $39d23330, $9d0f8e04, $b4758bc2, $8bd04d8b
+	codeordered(174) = $8bc085c2, $03752c45, $8dcc4d8b, $508a8804, $c84d8b02, $8b025188
+	codeordered(180) = $08fac110, $8a3e1488, $83018800, $c78303c1, $1845ff03, $8918458b
+	codeordered(186) = $453bc84d, $2b8c0ff8, $8bfffffe, $45ffc445, $c04501f4, $8bbc4501
+	codeordered(192) = $453bf445, $e48c0f1c, $5ffffffd, $c3c95b5e
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codethinning, 592
+	codethinning(  0) = $246c8d55, $58ec81b0, $8b000002, $458b604d, $64558b68, $705d8b53
+	codethinning(  6) = $db6bc103, $68458903, $566c458b, $03ff3357, $687d39c2, $895e026a
+	codethinning( 12) = $ffb86c45, $89000000, $5589604d, $145d8930, $89a87d89, $7d89ac7d
+	codethinning( 18) = $b47589b0, $89b84589, $4589bc75, $c44589c0, $89c84589, $7d89cc7d
+	codethinning( 24) = $d47589d0, $89d87d89, $4589dc45, $e47589e0, $89e84589, $7d89ec45
+	codethinning( 30) = $f47589f0, $89f84589, $4589fc7d, $04458900, $89087d89, $45890c75
+	codethinning( 36) = $89037d10, $458b687d, $68453970, $4589037e, $6c7d3968, $7d89037d
+	codethinning( 42) = $74758b6c, $7e6c7539, $6c758903, $037dcf3b, $39607d89, $037e6045
+	codethinning( 48) = $3b604589, $89037dd7, $7539307d, $89037e30, $c3f63075, $83097403
+	codethinning( 54) = $e38304c3, $145d89fc, $fe1c858d, $4589ffff, $40858d4c, $89fffffe
+	codethinning( 60) = $4589387d, $4c558b24, $c83d448d, $8d59096a, $7a8de070, $c7a5f3dc
+	codethinning( 66) = $00026445, $c88b0000, $026afa8b, $835ed78b, $198b0cc7, $834e1a89
+	codethinning( 72) = $c28304e9, $7df68504, $644dfff1, $4d8be479, $f8708d24, $c7644d89
+	codethinning( 78) = $00034445, $558b0000, $64458364, $5f026a0c, $198bce8b, $834f1a89
+	codethinning( 84) = $c2830ce9, $7dff8504, $04c683f1, $75444dff, $387d8bdd, $026445c7
+	codethinning( 90) = $83000000, $b48de8c0, $fffe64bd, $8bd68bff, $4445c7c8, $00000003
+	codethinning( 96) = $8b0cc683, $831a8919, $c2830cc1, $444dff04, $4dfff175, $04e88364
+	codethinning(102) = $00647d83, $90b8d77d, $01000000, $45014c45, $24c78324, $896cff83
+	codethinning(108) = $8c0f387d, $ffffff3d, $8b30558b, $d63b6c75, $7d8b4e7d, $144d8b74
+	codethinning(114) = $af0fc28b, $45037045, $2bd9f77c, $af0f4ffa, $7d03147d, $644d8958
+	codethinning(120) = $6b604d8b, $cf0303c9, $7d8bf22b, $3bdf8b60, $137d685d, $1a8ad18b
+	codethinning(126) = $47381c88, $3b03c283, $f27c687d, $0330558b, $4503644d, $da754e70
+	codethinning(132) = $00246583, $7d6c553b, $6c758b36, $af0fc28b, $45037045, $78450360
+	codethinning(138) = $4d8bf22b, $604d3968, $558b177d, $78552b7c, $8b604d2b, $3a1c8af8
+	codethinning(144) = $49471f88, $558bf775, $70450330, $3bdb754e, $55896c55, $ad8d0f48
+	codethinning(150) = $33000001, $c22b40c0, $8b444589, $45af0fc2, $60450370, $0fff4a8d
+	codethinning(156) = $03704daf, $4d897c45, $60758b28, $8968753b, $8d0f3c75, $0000012a
+	codethinning(162) = $33787d8b, $752b46f6, $7c7d2b60, $89344589, $7d891875, $1c7d8b1c
+	codethinning(168) = $80345d8b, $0f001f3c, $0000ef84, $2c658300, $f8958d00, $89fffffd
+	codethinning(174) = $7d8b3855, $38558b3c, $00646583, $2055894f, $5539d233, $c2940f64
+	codethinning(180) = $7401c2f6, $48758b7b, $8b4c4d89, $894e204d, $4d8b404d, $02398340
+	codethinning(186) = $c9333c74, $0f687d3b, $d233c19d, $0f6c753b, $ca0bc29d, $ff85d233
+	codethinning(192) = $0bc29c0f, $85d233ca, $c29c0ff6, $1675ca0b, $8b4c4d8b, $cf037855
+	codethinning(198) = $110cb60f, $3b40558b, $ff03740a, $4d8b6445, $4c4d0170, $0c404583
+	codethinning(204) = $46444d8b, $d233ce03, $0f03f983, $c933c29c, $0f644d39, $d185c194
+	codethinning(210) = $4d8b9875, $18758b28, $04204583, $8ddb3347, $fa833e14, $c39c0f03
+	codethinning(216) = $5539d233, $c2940f64, $850fda85, $ffffff58, $00647d83, $45ff1674
+	codethinning(222) = $3845812c, $00000090, $032c7d83, $ff308c0f, $0debffff, $c634558b
+	codethinning(228) = $45c70002, $00000124, $30558b00, $8b3c45ff, $ff4e3c7d, $7d3b3445
+	codethinning(234) = $18758968, $feeb8c0f, $45ffffff, $704d0348, $8b704503, $4dff4875
+	codethinning(240) = $6c753b44, $0f284d89, $fffeac8c, $6c553bff, $758b367d, $0fc28b6c
+	codethinning(246) = $037045af, $45036045, $8bf22b78, $4d39684d, $8b177d60, $552b7c55
+	codethinning(252) = $604d2b78, $1c8af88b, $471f8817, $8bf77549, $45033055, $db754e70
+	codethinning(258) = $486c458b, $4589c23b, $5e8c0f48, $8b000001, $89486845, $4d8b1845
+	codethinning(264) = $604d3b18, $0f3c4d89, $00013c8c, $48458b00, $7045af0f, $0346f633
+	codethinning(270) = $7c4503c1, $4d8bf12b, $7c4d2b78, $89287589, $4d8b1c4d, $013c801c
+	codethinning(276) = $fe840f00, $83000000, $8d002c65, $fffe1c8d, $384d89ff, $833c4d8b
+	codethinning(282) = $49006465, $8b4c4d89, $4d89384d, $39c93344, $940f644d, $43db33c1
+	codethinning(288) = $840fcb84, $00000083, $8b484d8b, $718d4455, $0ffe8bff, $89707daf
+	codethinning(294) = $4d29345d, $40558934, $83404d8b, $3c740239, $334c4d8b, $6c753bd2
+	codethinning(300) = $33c29d0f, $684d3bdb, $0bc39d0f, $85db33d3, $c39c0ff6, $db33d30b
+	codethinning(306) = $9c0fc985, $75d30bc3, $78558b13, $b60fcf03, $558b110c, $740a3b40
+	codethinning(312) = $6445ff03, $83707d03, $8b0c4045, $0346344d, $83d233ce, $9c0f03f9
+	codethinning(318) = $39c933c2, $940f644d, $75d185c1, $28758b9b, $8330558b, $ff044445
+	codethinning(324) = $4d8b4c45, $33ce034c, $03f983db, $33c39c0f, $644d39c9, $85c1940f
+	codethinning(330) = $46850fd9, $83ffffff, $7400647d, $2c45ff16, $90384581, $83000000
+	codethinning(336) = $0f032c7d, $ffff1b8c, $c60aebff, $45c70000, $00000124, $3c4dff00
+	codethinning(342) = $463c4d8b, $604d3b48, $0f287589, $fffee18d, $484dffff, $0f485539
+	codethinning(348) = $fffea98d, $6c553bff, $758b367d, $0fc28b6c, $037045af, $45036045
+	codethinning(354) = $8bf22b78, $4d39684d, $8b177d60, $552b7c55, $604d2b78, $1c8af88b
+	codethinning(360) = $471f8817, $8bf77549, $45033055, $db754e70, $896c553b, $8d0f4855
+	codethinning(366) = $000001ae, $2b40c033, $344589c2, $af0fca8b, $428d704d, $45af0fff
+	codethinning(372) = $184d8970, $8b404589, $3b4f687d, $7d89607d, $2a8c0f3c, $33000001
+	codethinning(378) = $348d40c0, $7c750339, $7d8bc72b, $7c7d2b78, $89284589, $7d8b1c7d
+	codethinning(384) = $3e3c801c, $ef840f00, $83000000, $8d002c65, $fffe4095, $205589ff
+	codethinning(390) = $8b3c7d8b, $65832055, $894f0064, $d2333855, $0f645539, $c2f6c294
+	codethinning(396) = $8b7e7401, $458b404d, $444d8948, $48384d8b, $8b4c4d89, $39834c4d
+	codethinning(402) = $333c7402, $687d3bc9, $33c19d0f, $6c453bd2, $0bc29d0f, $85d233ca
+	codethinning(408) = $c29c0fff, $d233ca0b, $9c0fc085, $75ca0bc2, $444d8b16, $0378558b
+	codethinning(414) = $0cb60fcf, $4c558b11, $03740a3b, $8b6445ff, $4d01704d, $4c458344
+	codethinning(420) = $344d8b0c, $33c80340, $03f983d2, $33c29c0f, $644d39c9, $85c1940f
+	codethinning(426) = $8b9875d1, $458b184d, $38458328, $db334704, $8338148d, $9c0f03fa
+	codethinning(432) = $39d233c3, $940f6455, $0fda85c2, $ffff5585, $647d83ff, $ff167400
+	codethinning(438) = $45812c45, $00009020, $2c7d8300, $2d8c0f03, $ebffffff, $0006c60a
+	codethinning(444) = $012445c7, $8b000000, $4dff3055, $3c7d8b3c, $7d3b4e40, $28458960
+	codethinning(450) = $fef08d0f, $458bffff, $4845ff40, $03704d03, $758b7045, $344dff48
+	codethinning(456) = $896c753b, $4589184d, $a88c0f40, $3bfffffe, $367d6c55, $8b6c758b
+	codethinning(462) = $45af0fc2, $60450370, $2b784503, $684d8bf2, $7d604d39, $7c558b17
+	codethinning(468) = $2b78552b, $f88b604d, $88171c8a, $7549471f, $30558bf7, $4e704503
+	codethinning(474) = $458bdb75, $c23b486c, $0f484589, $00015c8c, $60458b00, $8968453b
+	codethinning(480) = $8d0f3c45, $00000141, $0f48458b, $037045af, $4d8b6045, $7c450378
+	codethinning(486) = $2b46f633, $4d2b6075, $2875897c, $8b1c4d89, $3c801c4d, $840f0008
+	codethinning(492) = $00000101, $002c6583, $fe648d8d, $4d89ffff, $3c4d8b38, $00646583
+	codethinning(498) = $404d8949, $89384d8b, $c933444d, $0f644d39, $db33c194, $0fcb8443
+	codethinning(504) = $00008684, $484d8b00, $8d44558b, $fe8bff71, $707daf0f, $29345d89
+	codethinning(510) = $5589344d, $4c4d8b4c, $74023983, $404d8b3f, $4d3bd233, $c29d0f68
+	codethinning(516) = $753bc933, $c19d0f6c, $d10bdb33, $85404d8b, $c39c0fc9, $db33d30b
+	codethinning(522) = $9c0ff685, $75d30bc3, $78558b13, $b60fcf03, $558b110c, $740a3b4c
+	codethinning(528) = $6445ff03, $83707d03, $8b0c4c45, $0346344d, $83d233ce, $9c0f03f9
+	codethinning(534) = $39c933c2, $940f644d, $75d185c1, $30558b98, $8328758b, $ff044445
+	codethinning(540) = $4d8b4045, $33ce0340, $03f983db, $33c39c0f, $644d39c9, $85c1940f
+	codethinning(546) = $43850fd9, $83ffffff, $7400647d, $2c45ff16, $90384581, $83000000
+	codethinning(552) = $0f032c7d, $ffff188c, $c60aebff, $45c70000, $00000124, $3c45ff00
+	codethinning(558) = $4e3c4d8b, $684d3b40, $0f287589, $fffede8c, $484dffff, $0f485539
+	codethinning(564) = $fffea48d, $247d83ff, $31850f00, $8bfffff9, $d73b6c7d, $758b527d
+	codethinning(570) = $145d8b74, $8b604d8b, $03c96bc2, $7045af0f, $2b7c4503, $4edbf7f2
+	codethinning(576) = $1475af0f, $035c7503, $89fa2bce, $7d8b747d, $68558b60, $167dfa3b
+	codethinning(582) = $148af18b, $88168838, $56880156, $c6834702, $687d3b03, $4503ec7c
+	codethinning(588) = $ffcb0370, $d675744d, $835b5e5f, $c3c950c5
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codethinning2, 380
+	codethinning2(  0) = $81ec8b55, $0001f8ec, $104d8b00, $5318458b, $03205d8b, $8b5756c1
+	codethinning2(  6) = $4589147d, $1c458b14, $4589c703, $6bc38b18, $f63303c0, $6a147539
+	codethinning2( 12) = $45895a02, $00ffb8cc, $4d890000, $107d89f8, $ff28b589, $b589ffff
+	codethinning2( 18) = $ffffff2c, $ff309589, $b589ffff, $ffffff34, $ff388589, $8589ffff
+	codethinning2( 24) = $ffffff3c, $ff409589, $8589ffff, $ffffff44, $ff489589, $b589ffff
+	codethinning2( 30) = $ffffff4c, $ff50b589, $b589ffff, $ffffff54, $ff589589, $8589ffff
+	codethinning2( 36) = $ffffff5c, $ff609589, $8589ffff, $ffffff64, $ff688589, $9589ffff
+	codethinning2( 42) = $ffffff6c, $ff709589, $8589ffff, $ffffff74, $ff789589, $b589ffff
+	codethinning2( 48) = $ffffff7c, $89804589, $75898445, $8c758988, $89905589, $55899475
+	codethinning2( 54) = $9c558998, $89a07589, $4589a445, $ac7589a8, $89b05589, $037db445
+	codethinning2( 60) = $39147589, $037e145d, $39145d89, $037d1875, $8b187589, $5d39245d
+	codethinning2( 66) = $89037e18, $ce3b185d, $7589037d, $20458bf8, $7ef84539, $f8458903
+	codethinning2( 72) = $037dfe3b, $39107589, $037e105d, $8b105d89, $03a8cc45, $c0830974
+	codethinning2( 78) = $fce08304, $8dcc4589, $ffff4885, $1c4589ff, $fe2c858d, $45c7ffff
+	codethinning2( 84) = $000004d0, $1c758b00, $c683096a, $788d59e0, $8ba5f3dc, $45c71c4d
+	codethinning2( 90) = $000008fc, $8bf08b00, $fc4dff39, $e9833e89, $04c68304, $00fc7d83
+	codethinning2( 96) = $4583ed7d, $c083241c, $d04dff48, $458bc775, $10453918, $458b577d
+	codethinning2(102) = $45af0f10, $105d2b20, $03cc4d8b, $758b2c45, $187d8bf8, $f703f66b
+	codethinning2(108) = $af0f4bd9, $5d03cc5d, $1c4d8908, $7d2bf303, $f84d8b10, $89144d3b
+	codethinning2(114) = $157df44d, $8bfc7589, $1b8afc5d, $03fc4583, $41081c88, $7c144d3b
+	codethinning2(120) = $1c7503ee, $4f204503, $5d8bd775, $18458b24, $b8458948, $8318458b
+	codethinning2(126) = $3900d065, $437d1045, $0f10458b, $032045af, $7d8bf845, $28450318
+	codethinning2(132) = $8b107d2b, $4d39144d, $8b227df8, $5d2b2c5d, $14758b28, $8bf8752b
+	codethinning2(138) = $f05d89c8, $5d8b03eb, $0b1c8af0, $4e411988, $5d8bf475, $20450324
+	codethinning2(144) = $8bd0754f, $453b1045, $e4458918, $01ca8d0f, $4d8b0000, $f8758b10
+	codethinning2(150) = $2b40c033, $f04589c1, $0fff418d, $0f204daf, $032045af, $2c758bce
+	codethinning2(156) = $4589f103, $bc4d89e8, $8bdc7589, $753bf875, $f4758914, $012e8d0f
+	codethinning2(162) = $4d8b0000, $89f633dc, $4d8bfc4d, $752b4628, $2c4d2bf8, $89c07589
+	codethinning2(168) = $03ebc44d, $8bc44d8b, $3c80fc7d, $840f0039, $000000eb, $00d46583
+	codethinning2(174) = $fe088d8d, $4d89ffff, $f47d8be0, $83e04d8b, $4f001c65, $33d84d89
+	codethinning2(180) = $1c4d39c9, $f6c1940f, $7a7401c1, $89e4758b, $458bc845, $45894ed8
+	codethinning2(186) = $ec458bec, $3c741039, $7d3bc033, $c09d0f14, $753bc933, $c19d0f18
+	codethinning2(192) = $c933c10b, $9c0fff85, $33c10bc1, $0ff685c9, $c10bc19c, $458b1675
+	codethinning2(198) = $284d8bc8, $b60fc703, $4d8b0804, $74013bec, $1c45ff03, $0120458b
+	codethinning2(204) = $4583c845, $458b0cec, $c60346f0, $f883c933, $c19c0f03, $4539c033
+	codethinning2(210) = $c0940f1c, $9975c885, $8be8458b, $4583c075, $334704d8, $3e0c8ddb
+	codethinning2(216) = $0f03f983, $c933c39c, $0f1c4d39, $d985c194, $ff59850f, $7d83ffff
+	codethinning2(222) = $1374001c, $83d445ff, $8348e045, $0f04d47d, $ffff348c, $8b0debff
+	codethinning2(228) = $01c6fc4d, $d045c700, $00000001, $ff245d8b, $4d8bf445, $45ff4e14
+	codethinning2(234) = $f44d39fc, $0fc07589, $fffeef8c, $bc4d8bff, $ff20758b, $7501e445
+	codethinning2(240) = $8bc603dc, $4dffe475, $18753bf0, $0fe84589, $fffea68c, $28458bff
+	codethinning2(246) = $0318758b, $10752bc8, $8be84d89, $7d3bf87d, $8b287d14, $452b2c45
+	codethinning2(252) = $1c4d8928, $8bf04589, $c72b1445, $8b1c4d8b, $0c8af07d, $1c7d8b39
+	codethinning2(258) = $481c45ff, $ec750f88, $03e84d8b, $894e204d, $c775e84d, $e9b8758b
+	codethinning2(264) = $00000155, $4814458b, $89f8453b, $8c0ff445, $00000144, $2075af0f
+	codethinning2(270) = $0347ff33, $2c7503f0, $458bf82b, $2c452b28, $89e87d89, $03ebc445
+	codethinning2(276) = $80c4458b, $0f00303c, $00010484, $d4658300, $2c858d00, $89fffffe
+	codethinning2(282) = $458bd845, $1c6583f4, $45894800, $d8458bec, $33e04589, $1c4539c0
+	codethinning2(288) = $a8c0940f, $8f840f01, $8b000000, $788de445, $0fcf8bff, $89204daf
+	codethinning2(294) = $4d8bf04d, $dc45c7e0, $00000001, $89dc4529, $4d8bfc4d, $8b1139fc
+	codethinning2(300) = $3c74ec45, $453bc933, $c19d0f14, $7d3bdb33, $c39d0f18, $db33cb0b
+	codethinning2(306) = $9c0fc085, $33cb0bc3, $0fff85db, $cb0bc39c, $4d8b1675, $8bc103f0
+	codethinning2(312) = $b60f284d, $4d8b0804, $74013bfc, $1c45ff03, $0120458b, $4583f045
+	codethinning2(318) = $458b0cfc, $c70347dc, $f883c933, $c19c0f03, $4539c033, $c0940f1c
+	codethinning2(324) = $9675c885, $8b245d8b, $4583e87d, $45ff04e0, $ec458bec, $c933c703
+	codethinning2(330) = $0f03f883, $c033c19c, $0f1c4539, $c885c094, $ff3d850f, $7d83ffff
+	codethinning2(336) = $1374001c, $83d445ff, $8348d845, $0f04d47d, $ffff158c, $c60aebff
+	codethinning2(342) = $45c70006, $000001d0, $f44dff00, $47f8458b, $f445394e, $0fe87d89
+	codethinning2(348) = $fffedb8d, $e4758bff, $10753b4e, $0fe47589, $fffe9f8d, $d07d83ff
+	codethinning2(354) = $65850f00, $8bfffffc, $45391845, $8b547d10, $af0f1045, $4d8b2045
+	codethinning2(360) = $105d2bcc, $8b2c4503, $4d891855, $1c5df71c, $d9af0f4b, $03f84d8b
+	codethinning2(366) = $c96b0c5d, $2bcb0303, $da8b1055, $3bf87d8b, $167d147d, $148af18b
+	codethinning2(372) = $88168838, $56880156, $c6834702, $147d3b03, $4d03ec7c, $2045031c
+	codethinning2(378) = $5fd9754b, $c3c95b5e
+
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86
+	xdim codeslca, 584
+	codeslca(  0) = $246c8d55, $fcec81b0, $8b000004, $558b6845, $5d8b5360, $020c8d64
+	codeslca(  6) = $566c458b, $5770758b, $8b033c8d, $03c06bc6, $5d89c985, $644d8940
+	codeslca( 12) = $7d084589, $64658304, $64753900, $7589037e, $7dff8564, $8bff3302
+	codeslca( 18) = $fe3b7475, $fe8b027e, $027dd285, $553bd233, $8b037e70, $db857055
+	codeslca( 24) = $6583047d, $75390040, $89037e40, $03a84075, $c0830974, $fce08304
+	codeslca( 30) = $33084589, $707d83c9, $c19e0f08, $fe83db33, $c39e0f08, $7e74cb0b
+	codeslca( 36) = $0f407d39, $00087d8d, $40752b00, $f7704589, $0f46705d, $428df0af
+	codeslca( 42) = $03c06bfe, $c96bca8b, $03c60303, $ce035845, $2b5c758b, $4c8d407d
+	codeslca( 48) = $4d89fc31, $607d8974, $7d64553b, $58758b2f, $8b5c752b, $7589744d
+	codeslca( 54) = $64758b68, $f22bf88b, $8a685d8b, $19880b1c, $88015f8a, $1f8aff59
+	codeslca( 60) = $83fe5988, $c78303c1, $e4754e03, $01704d8b, $c103744d, $75604dff
+	codeslca( 66) = $0808e9bf, $5d8b0000, $3c658370, $04c38300, $8b04468d, $cbaf0fc8
+	codeslca( 72) = $4d89026a, $4d015900, $644d0140, $5589d103, $fd508df8, $af0ff903
+	codeslca( 78) = $605d89d3, $48605df7, $89c3af0f, $5d890c45, $fc7d896c, $33045589
+	codeslca( 84) = $8b03ebc0, $4e8d0455, $02f98302, $0c8d787e, $484d891b, $f7084d8b
+	codeslca( 90) = $384d89d9, $8df84d8b, $af0fff56, $55030855, $fec1833c, $0303c96b
+	codeslca( 96) = $584d03ca, $5589d68b, $70558b4c, $8302c283, $45c702fa, $00000268
+	codeslca(102) = $8b2d7e00, $7d8b4855, $03d00378, $68558bfa, $8b444d89, $1b8a445d
+	codeslca(108) = $03444583, $8b171c88, $8342705d, $d33b02c3, $5d8be97c, $fc7d8b6c
+	codeslca(114) = $01384d03, $4dff485d, $8bb6754c, $65830455, $0c8d0044, $4c4d891b
+	codeslca(120) = $890c4d8b, $4d894855, $3845c768, $00000002, $407edb85, $8d684d8b
+	codeslca(126) = $4d8b0814, $78550348, $8b083c8d, $7d03444d, $01348d78, $034c4d8b
+	codeslca(132) = $c8037875, $89784d03, $198a105d, $1f8a1e88, $88474641, $4dff421a
+	codeslca(138) = $8bef7510, $5d8b7475, $fc7d8b6c, $01604d8b, $4d01684d, $445d0148
+	codeslca(144) = $ff4c5d01, $a875384d, $00486583, $891b0c8d, $4d8b444d, $4c4d8904
+	codeslca(150) = $890c4d8b, $45c7684d, $00000210, $7edb8500, $684d8b40, $8b08148d
+	codeslca(156) = $55034c4d, $083c8d78, $03484d8b, $348d787d, $444d8b08, $03787503
+	codeslca(162) = $784d03c8, $8a385d89, $8a1e8819, $4746411f, $ff421a88, $ef75384d
+	codeslca(168) = $8b74758b, $5d8bfc7d, $604d8b6c, $01684d01, $5d014c4d, $445d0148
+	codeslca(174) = $75104dff, $3c45ffa8, $83004503, $0f033c7d, $fffe868c, $40458bff
+	codeslca(180) = $4589c73b, $b58d0f3c, $8b000005, $453bf845, $68458964, $059a8d0f
+	codeslca(186) = $558b0000, $fe428d3c, $8bc3af0f, $caaf0fcb, $89384589, $03eb4c4d
+	codeslca(192) = $8b38458b, $c103684d, $33784503, $0c4589c9, $5d8b03eb, $5f076a6c
+	codeslca(198) = $4589f633, $6045c770, $00000005, $8b5afe6a, $b60f7045, $89421004
+	codeslca(204) = $4694b544, $7c03fa83, $705d01ee, $75604dff, $94458be3, $89c4758b
+	codeslca(210) = $458b1445, $18458998, $89a8458b, $458b1c45, $204589ac, $89b0458b
+	codeslca(216) = $458b2445, $284589c0, $7589d233, $03c0332c, $42149544, $f77cd73b
+	codeslca(222) = $00706583, $f7df8b99, $606583fb, $70558b00, $1495548b, $da8bd02b
+	codeslca(228) = $01daaf0f, $45ff605d, $707d3970, $8489e77c, $fffee00d, $60458bff
+	codeslca(234) = $f7df8b99, $89d233fb, $84892c75, $fffe740d, $98458bff, $8b144589
+	codeslca(240) = $45899c45, $a0458b18, $8b1c4589, $4589ac45, $b0458b20, $8b244589
+	codeslca(246) = $4589b445, $03c03328, $42149544, $f77cd73b, $00706583, $f7df8b99
+	codeslca(252) = $606583fb, $70558b00, $1495548b, $da8bd02b, $01daaf0f, $45ff605d
+	codeslca(258) = $707d3970, $8489e77c, $fffee40d, $60458bff, $f7df8b99, $89d233fb
+	codeslca(264) = $84892875, $fffe780d, $a0458bff, $8b144589, $4589a445, $b0458b18
+	codeslca(270) = $8b1c4589, $4589b445, $b8458b20, $8b244589, $4589c845, $03c0332c
+	codeslca(276) = $42149544, $f77cd73b, $00706583, $f7df8b99, $606583fb, $70558b00
+	codeslca(282) = $1495548b, $da8bd02b, $01daaf0f, $45ff605d, $707d3970, $8489e77c
+	codeslca(288) = $fffee80d, $60458bff, $f7df8b99, $89d233fb, $84891c75, $fffe7c0d
+	codeslca(294) = $b4458bff, $8b144589, $4589b845, $c8458b18, $8b204589, $4589cc45
+	codeslca(300) = $dc458b24, $8b284589, $4589e045, $03c0332c, $42149544, $f77cd73b
+	codeslca(306) = $00706583, $f7df8b99, $606583fb, $70558b00, $1495548b, $da8bd02b
+	codeslca(312) = $01daaf0f, $45ff605d, $707d3970, $8489e77c, $fffeec0d, $60458bff
+	codeslca(318) = $f7df8b99, $89d233fb, $84891475, $fffe800d, $c8458bff, $8b184589
+	codeslca(324) = $4589d845, $dc458b1c, $8b204589, $4589e045, $f0458b24, $8b284589
+	codeslca(330) = $4589f445, $03c0332c, $42149544, $f77cd73b, $00706583, $f7df8b99
+	codeslca(336) = $606583fb, $70558b00, $1495548b, $da8bd02b, $01daaf0f, $45ff605d
+	codeslca(342) = $707d3970, $8489e77c, $fffef00d, $60458bff, $5f076a99, $7d8bfff7
+	codeslca(348) = $89d233d4, $7d891475, $0d848918, $fffffe84, $89d8458b, $458b1c45
+	codeslca(354) = $204589dc, $89e8458b, $458b2445, $284589ec, $89f0458b, $c0332c45
+	codeslca(360) = $14954403, $07fa8342, $6583f67c, $076a0070, $fbf75b99, $00606583
+	codeslca(366) = $8b70558b, $2b149554, $0fda8bd0, $5d01daaf, $7045ff60, $07707d83
+	codeslca(372) = $8489e67c, $fffef40d, $60458bff, $5b076a99, $d233fbf7, $89187589
+	codeslca(378) = $8489207d, $fffe880d, $c0458bff, $8b144589, $4589d045, $d8458b1c
+	codeslca(384) = $8b244589, $4589e445, $e8458b28, $332c4589, $954403c0, $fa834214
+	codeslca(390) = $83f67c07, $6a007065, $f75b9907, $606583fb, $70558b00, $1495548b
+	codeslca(396) = $da8bd02b, $01daaf0f, $45ff605d, $707d8370, $89e67c07, $fef80d84
+	codeslca(402) = $458bffff, $076a9960, $33fbf75b, $247589d2, $892c7d89, $fe8c0d84
+	codeslca(408) = $458bffff, $144589a8, $89ac458b, $458b1845, $1c4589bc, $89c0458b
+	codeslca(414) = $458b2045, $284589d0, $4403c033, $83421495, $f67c07fa, $00706583
+	codeslca(420) = $5b99076a, $6583fbf7, $558b0060, $95548b70, $8bd02b14, $daaf0fda
+	codeslca(426) = $ff605d01, $7d837045, $e67c0770, $fc0d8489, $8bfffffe, $6a996045
+	codeslca(432) = $fbf75b07, $7589d233, $2c7d8924, $900d8489, $8bfffffe, $4589ac45
+	codeslca(438) = $b0458b14, $8b184589, $4589b445, $c0458b1c, $8b204589, $4589c845
+	codeslca(444) = $d8458b28, $8b304589, $4589dc45, $03c03334, $42149544, $7c09fa83
+	codeslca(450) = $99096af6, $33fef75e, $8bff33d2, $2b149574, $0fde8bf0, $fb03deaf
+	codeslca(456) = $09fa8342, $8489ed7c, $ffff000d, $99c78bff, $f75e096a, $24c183fe
+	codeslca(462) = $700d8489, $8bfffffe, $45030c45, $6cf98300, $0f0c4589, $fffbc18c
+	codeslca(468) = $8dc933ff, $ff708d84, $2083ffff, $89036a00, $ff4c8d8c, $d233ffff
+	codeslca(474) = $748db48d, $5ffffffe, $c6831603, $f8754f24, $09f98341, $d37c1089
+	codeslca(480) = $8343db33, $fffce4a5, $85c700ff, $fffffb54, $00000008, $e09dbc8b
+	codeslca(486) = $4bfffffc, $549d848d, $8bfffffb, $04458908, $9939048d, $f8d1c22b
+	codeslca(492) = $7085848b, $89ffffff, $7d89705d, $604d8910, $4589f18b, $8b06eb0c
+	codeslca(498) = $01eb0c45, $bd843947, $ffffff70, $01ebf67c, $b584394e, $ffffff70
+	codeslca(504) = $fe3bf67f, $8c8d387f, $ffff70b5, $8d198bff, $ff70bd84, $108bffff
+	codeslca(510) = $11891889, $4cb58c8d, $8bffffff, $bd848d19, $ffffff4c, $8947108b
+	codeslca(516) = $705d8b18, $89fe3b4e, $604d8b11, $7539a97e, $8b067d10, $30890445
+	codeslca(522) = $7df93b43, $9dbc890f, $fffffce4, $549d8c89, $43fffffb, $8f0fdb85
+	codeslca(528) = $ffffff50, $8b684d8b, $c1034c45, $ff4c8d8b, $4503ffff, $8d036a7c
+	codeslca(534) = $fee08d8c, $8a5effff, $03108811, $c1830045, $f3754e24, $8b6845ff
+	codeslca(540) = $453b6845, $6c5d8b64, $fa828c0f, $758bffff, $fc7d8b74, $393c45ff
+	codeslca(546) = $8c0f3c7d, $fffffa4b, $3b40558b, $8b7f7dd7, $c38b7c4d, $89c2af0f
+	codeslca(552) = $c1037445, $f7084d8b, $46f22bd9, $0875af0f, $895c7503, $4d8b704d
+	codeslca(558) = $03c96bf8, $fb314c8d, $4d89fa2b, $687d8960, $3bf8758b, $337d6475
+	codeslca(564) = $4d8bf98b, $08148d00, $8b6c5589, $0c8d7455, $7c558b4a, $148aca03
+	codeslca(570) = $ff578830, $8a6c558b, $17883214, $8831148a, $83460157, $753b03c7
+	codeslca(576) = $8be37c64, $4d03604d, $745d0170, $4dffc303, $604d8968, $5e5fb275
+	codeslca(582) = $50c5835b, $0000c3c9
+	
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codecopy, 138
+	codecopy(  0) = $51ec8b55, $5d8b5351, $0000b828, $57568000, $0875d83b, $89104d8b
+	codecopy(  6) = $d98b284d, $3b2c7d8b, $8b0675f8, $7d89147d, $3045392c, $4d8b0675
+	codecopy( 12) = $304d8920, $8b34558b, $d03b2475, $d68b0275, $4d39c933, $8b0c7d10
+	codecopy( 18) = $d92b104d, $00106583, $85285d89, $3b1079db, $8b027ecb, $28458bcb
+	codecopy( 24) = $83104529, $8b002865, $c1031845, $4d39c933, $8b0c7d14, $f92b144d
+	codecopy( 30) = $00146583, $852c7d89, $3b1079ff, $8b027ecf, $2c7d8bcf, $83147d29
+	codecopy( 36) = $8b002c65, $5d8b1c7d, $89f90320, $5d391c7d, $89037e10, $7539105d
+	codecopy( 42) = $89037e14, $4d8b1475, $284d3930, $4d89037e, $2c553928, $5589037e
+	codecopy( 48) = $104d8b2c, $0279c803, $cb3bc033, $c38b057e, $8b10452b, $0c8d145d
+	codecopy( 54) = $79c9853b, $89ff3305, $ce3b1c7d, $fe8b077e, $7d89fb2b, $284d8b1c
+	codecopy( 60) = $0279c803, $5d8bc033, $7ecb3b30, $2bc38b05, $4d8b2845, $79cf032c
+	codecopy( 66) = $89ff3305, $ca3b1c7d, $fa8b087e, $892c7d2b, $4d8b1c7d, $03c06b20
+	codecopy( 72) = $03c96b41, $43fce183, $8303db6b, $894ffce3, $4d893045, $fc5d8918
+	codecopy( 78) = $83207d89, $840fffff, $000000dd, $8928458b, $c06b344d, $204d8b03
+	codecopy( 84) = $8b1c4d2b, $4d2b107d, $03ff6b2c, $552bca03, $cbaf0f20, $f72c552b
+	codecopy( 90) = $c803345d, $8bf84589, $452b2045, $245d8914, $f71c452b, $c603245d
+	codecopy( 96) = $1845af0f, $0f4ac703, $5d8bd3af, $f8550320, $752bf32b, $f8558914
+	codecopy(102) = $75af0f4e, $89f70318, $538d2075, $14758b01, $7e2c753b, $8bf88b06
+	codecopy(108) = $8b06ebd9, $5d8b207d, $10758bf8, $8b28753b, $227e3075, $851c7589
+	codecopy(114) = $8b4174f6, $f7030875, $030c7d8b, $ff1e8afb, $88461c4d, $7d83471f
+	codecopy(120) = $f175001c, $034e26eb, $8bde03fe, $75893075, $74f6851c, $0c758b17
+	codecopy(126) = $7d03f303, $ff1f8a08, $884f1c4d, $7d834e1e, $f175001c, $0118758b
+	codecopy(132) = $758b2075, $344503fc, $01244d03, $754af875, $5b5e5f84, $0000c3c9
+
+	;線形補間しないならこちらのバージョンのほうが速いかも
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	;xdim codeaffine, 164
+	;codeaffine(  0) = $8b10ec83, $8b202444, $8b24244c, $533c2454, $55105a8b, $14244489
+	;codeaffine(  6) = $30244403, $24748b56, $0e2c8d28, $89144a8b, $8b342444, $74895702
+	;codeaffine( 12) = $6c891824, $5c891024, $f98b3424, $0e7ec085, $af0fe88b, $0fdd03ee
+	;codeaffine( 18) = $102444af, $f08b0ceb, $03f5af0f, $44af0fde, $44012c24, $428b3424
+	;codeaffine( 24) = $85f08b08, $0f0c7ec0, $302474af, $2444af0f, $0f0aeb38, $382474af
+	;codeaffine( 30) = $2444af0f, $24440130, $04428b34, $f08bde03, $0c7ec085, $2474af0f
+	;codeaffine( 36) = $44af0f2c, $0aeb1024, $2474af0f, $44af0f10, $6c8b2c24, $f8033824
+	;codeaffine( 42) = $030c428b, $8bd233ce, $7ec23bf0, $74af0f0a, $af0f3024, $0f08ebc5
+	;codeaffine( 48) = $af0ff5af, $03302444, $24448bf8, $ffff0534, $ce030000, $ffffc781
+	;codeaffine( 54) = $f8c10000, $10fbc110, $c110ffc1, $5c8910f9, $44894c24, $7c893424
+	;codeaffine( 60) = $c23b1424, $5489067d, $c28b3424, $4424748b, $047ec63b, $34247489
+	;codeaffine( 66) = $067dfa3b, $14245489, $548bfa8b, $fa3b4824, $5489067e, $fa8b1424
+	;codeaffine( 72) = $d83bc033, $4489067d, $d88b4c24, $067ede3b, $4c247489, $c83bde8b
+	;codeaffine( 78) = $c933027d, $027eca3b, $4439ca8b, $047d1024, $10244489, $3c24448b
+	;codeaffine( 84) = $10244439, $4489047e, $ed851024, $44c70879, $00003824, $748b0000
+	;codeaffine( 90) = $74394024, $047e3824, $38247489, $2c247c83, $c7087d00, $00182444
+	;codeaffine( 96) = $39000000, $7e182444, $24448904, $247c8318, $087d0030, $1c2444c7
+	;codeaffine(102) = $00000000, $1c247439, $7489047e, $448d1c24, $e0830340, $244489fc
+	;codeaffine(108) = $24448b2c, $40448d44, $fce08303, $cf3be98b, $00bf8d0f, $7c8b0000
+	;codeaffine(114) = $d12b2424, $d0af0f4a, $28245403, $def7f08b, $035b048d, $247489c2
+	;codeaffine(120) = $24448944, $245c3b30, $858d0f34, $8b000000, $24448bf0, $08488b54
+	;codeaffine(126) = $af0f108b, $d3af0fcd, $4803ca03, $0c508b10, $0f04408b, $af0fd5af
+	;codeaffine(132) = $8bd003c3, $03542444, $f9c11450, $10fac110, $18244c39, $4c3b387f
+	;codeaffine(138) = $327d1024, $1c245439, $543b2c7f, $267d3824, $4024448b, $0f48c22b
+	;codeaffine(144) = $2c2444af, $03490c8d, $14b60fc1, $8a168838, $8801384c, $b60f014e
+	;codeaffine(150) = $88023854, $83430256, $5c3b03c6, $897c3424, $4424748b, $3024448b
+	;codeaffine(156) = $4c245c8b, $89c60345, $3b302444, $0f14246c, $ffff608c, $5d5e5fff
+	;codeaffine(162) = $10c4835b, $000000c3
+	
+	//compile by Microsoft(R) 32-bit C/C++ Optimizing Compiler Version 16.00.30319.01 for 80x86
+	xdim codeaffine, 299
+	codeaffine(  0) = $8b24ec83, $8b38244c, $53342444, $34245c8b, $748b5655, $568b5c24
+	codeaffine(  6) = $0b2c8d14, $89104e8b, $03182444, $89482444, $8944244c, $8b5c244c
+	codeaffine( 12) = $4489570e, $448b4c24, $5c896824, $6c891824, $fa8b1024, $107ec985
+	codeaffine( 18) = $af0fe98b, $246c01eb, $4caf0f48, $0eeb1024, $af0fd98b, $245c01dd
+	codeaffine( 24) = $4caf0f48, $4c014024, $4e8b6024, $85d98b08, $0f0c7ec9, $44245caf
+	codeaffine( 30) = $244caf0f, $0f0aeb4c, $4c245caf, $244caf0f, $244c0144, $044e8b60
+	codeaffine( 36) = $48245c01, $10246c8b, $c985d98b, $af0f0a7e, $0f40245c, $08ebcdaf
+	codeaffine( 42) = $0fddaf0f, $40244caf, $4e8bf903, $33d3030c, $3bd98bf6, $0f0c7ece
+	codeaffine( 48) = $44245caf, $244caf0f, $0f0aeb4c, $4c245caf, $244caf0f, $247cc144
+	codeaffine( 54) = $f9031048, $60244c8b, $ffffc181, $d3030000, $ffffc781, $f9c10000
+	codeaffine( 60) = $10ffc110, $8910fac1, $8960244c, $3b14247c, $89067dce, $8b602474
+	codeaffine( 66) = $245c8bce, $7ecb3b58, $245c8904, $7dfe3b60, $24748906, $8bfe8b14
+	codeaffine( 72) = $3b5c2474, $89047efe, $33142474, $247c39ff, $89047d48, $3948247c
+	codeaffine( 78) = $7e48245c, $245c8904, $7dd73b48, $3bd23302, $8b027ed6, $7def3bd6
+	codeaffine( 84) = $89ed3306, $8b10246c, $3b50244c, $89047ee9, $3910244c, $7d4c247c
+	codeaffine( 90) = $247c8904, $247c8b4c, $247c3954, $89047e4c, $834c247c, $0040247c
+	codeaffine( 96) = $44c7087d, $00001824, $4c390000, $047e1824, $18244c89, $44247c83
+	codeaffine(102) = $c7087d00, $001c2444, $39000000, $7e1c247c, $247c8904, $494c8d1c
+	codeaffine(108) = $fce18303, $58244c89, $035b4c8d, $8bfce183, $247c89fa, $24543b24
+	codeaffine(114) = $d38d0f14, $2b000002, $24548bf2, $af0f4e48, $f7d98bf1, $520c8ddb
+	codeaffine(120) = $5c89f103, $ee8b3024, $2c247489, $0024648d, $50246c89, $28245489
+	codeaffine(126) = $6024543b, $02878d0f, $708b0000, $0f088b08, $af0ff7af, $8bf103ca
+	codeaffine(132) = $70030c48, $cfaf0f10, $0f04788b, $cf03faaf, $8b144803, $c1d18bfe
+	codeaffine(138) = $fac110ff, $247c3910, $2c8f0f18, $3b000002, $0f10247c, $0002228d
+	codeaffine(144) = $24543900, $188f0f1c, $3b000002, $0f4c2454, $00020e8d, $24448b00
+	codeaffine(150) = $48c22b54, $2444af0f, $7f1c8d58, $7c83c303, $75006424, $24748b25
+	codeaffine(156) = $14b60f38, $244c8b30, $2914883c, $3054b60f, $29548801, $30448a01
+	codeaffine(162) = $29448802, $01cde902, $df8b0000, $2b10e3c1, $c1da8bf3, $cb2b10e3
+	codeaffine(168) = $38245c8b, $20244c89, $180cb60f, $54894247, $4c895c24, $7c3b4024
+	codeaffine(174) = $05741024, $184cb60f, $24543b03, $8b08754c, $8b402454, $8b0eebda
+	codeaffine(180) = $24542bd0, $1cb60f58, $24548b1a, $245c8940, $247c3b44, $8b217410
+	codeaffine(186) = $3b5c2454, $744c2454, $245c8b11, $2bd08b38, $0f582454, $031a5cb6
+	codeaffine(192) = $d98b02eb, $4024548b, $af0fca2b, $10f9c1ce, $4c8bd103, $d92b4424
+	codeaffine(198) = $c1deaf0f, $da2b10fb, $af0fd903, $8b20245c, $c13c244c, $da0210fb
+	codeaffine(204) = $8b291c88, $0f38244c, $010854b6, $10247c3b, $ca8b0475, $b60f05eb
+	codeaffine(210) = $8b04084c, $3b5c245c, $754c245c, $89ea8b08, $eb442454, $246c8b13
+	codeaffine(216) = $2bd88b38, $0f58245c, $012b6cb6, $44246c89, $10247c3b, $5c8b1b74
+	codeaffine(222) = $5c394c24, $15745c24, $38246c8b, $5c2bd88b, $b60f5824, $eb042b5c
+	codeaffine(228) = $ebdd8b06, $8bd98b06, $2b44246c, $0fdd2bca, $af0fceaf, $10fbc1de
+	codeaffine(234) = $0310f9c1, $03da2bd1, $5caf0fdd, $6c8b2024, $fbc15024, $8bda0210
+	codeaffine(240) = $883c2454, $8b012a5c, $0f382454, $02104cb6, $40244c89, $10247c3b
+	codeaffine(246) = $b60f0574, $8b05104c, $394c2454, $755c2454, $24548b0a, $24548940
+	codeaffine(252) = $8b17eb44, $8b38245c, $24542bd0, $54b60f58, $5489021a, $548b4424
+	codeaffine(258) = $7c3b4024, $19741024, $4c247c8b, $5c247c39, $442b1574, $7c8b5824
+	codeaffine(264) = $b60f3824, $eb053844, $24448b08, $8b02eb44, $0fca2bc1, $f9c1ceaf
+	codeaffine(270) = $8bd10310, $24448bc8, $0fc82b44, $f9c1ceaf, $03ca2b10, $4caf0fc8
+	codeaffine(276) = $f9c12024, $8bca0210, $883c2454, $8b022a4c, $8b682444, $8b282454
+	codeaffine(282) = $4224247c, $8903c583, $8950246c, $3b282454, $0f602454, $fffd818c
+	codeaffine(288) = $24548bff, $245c8b48, $246c8b30, $eb03472c, $24247c89, $2c246c89
+	codeaffine(294) = $14247c3b, $fd4e8c0f, $5e5fffff, $c4835b5d, $0000c324
+
+	dim aff, 6
+	dim iaff, 6
+
+	return
+
+/**
+ * アフィン変換の内部での固定小数点精度(変更不可)
+ */
+#const global ipm_a_f 1 << 16
+
+//使用する時は、マクロで置き換えています。
+//「\」これはマクロが1行で書き切れないので、改行のために利用しています。
+//実際は、マクロで置き換えた後は一行になります。
+#define global ipm_codefilter(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12=0,%13=0,%14=0,%15=0,%16=0,%17=0) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15,%16,%17:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codefilter@ipmpack),17)
+
+#define global ipm_codergbtable(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10=0,%11=0) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codergbtable@ipmpack),11)
+;旧命令1.050
+#define global ipm_codecontrast(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10=0,%11=0) \
+ipm_codergbtable %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11
+
+#define global ipm_codehsv(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codehsv@ipmpack),11)
+
+#define global ipm_codehls(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codehls@ipmpack),11)
+
+#define global ipm_codegrayscale(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10=0,%11=0) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codegrayscale@ipmpack),11)
+
+#define global ipm_codergbmatrix(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10=0) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codergbmatrix@ipmpack),10)
+;旧命令1.050
+#define global ipm_codergb(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10=0) \
+ipm_codergbmatrix %1,%2,%3,%4,%5,%6,%7,%8,%9,%10
+
+#define global ipm_codeadd(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codeadd@ipmpack),9)
+;旧命令1.050
+#define global ipm_codeaddition(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+ipm_codeadd %1,%2,%3,%4,%5,%6,%7,%8,%9
+
+#define global ipm_codesub(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codesub@ipmpack),9)
+;旧命令1.050
+#define global ipm_codesubtraction(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+ipm_codesub %1,%2,%3,%4,%5,%6,%7,%8,%9
+
+#define global ipm_codemul(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codemul@ipmpack),9)
+;旧命令1.050
+#define global ipm_codemultiplication(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+ipm_codemul %1,%2,%3,%4,%5,%6,%7,%8,%9
+
+#define global ipm_codediv(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codediv@ipmpack),9)
+;旧命令1.050
+#define global ipm_codedivision(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+ipm_codediv %1,%2,%3,%4,%5,%6,%7,%8,%9
+
+#define global ipm_codetransparent(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codetransparent@ipmpack),10)
+
+#define global ipm_codealphachannel(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codealphachannel@ipmpack),10)
+
+#define global ipm_colorcount(%1,%2,%3,%4,%5,%6,%7,%8) \
+sdim colorflag@ipmpack,0x200000:prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,varptr(colorflag@ipmpack):\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codecolorcount@ipmpack),9):sdim colorflag@ipmpack
+
+#define global ipm_codehistograph(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codehistograph@ipmpack),11)
+
+;Rank filter ?
+#define global ipm_codemedianfilter(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15=0) \
+dim buff@ipmpack,%9*%10*4*3+128*4*2:\
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15,varptr(buff@ipmpack):\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codemedianfilter@ipmpack),16):\
+sdim buff@ipmpack
+
+#define global ipm_codepallet(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codepallet@ipmpack),10)
+
+#define global ipm_codemediancut(%1,%2,%3,%4,%5,%6,%7,%8,%9) \
+dim colors@ipmpack,0x8000:dim colorcnt@ipmpack,0x8000:dim colorminmax@ipmpack,4096:\
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,varptr(colors@ipmpack),varptr(colorcnt@ipmpack),varptr(colorminmax@ipmpack):\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codemediancut@ipmpack),12):\
+dim colors@ipmpack:dim colorcnt@ipmpack:dim colorminmax@ipmpack
+
+#define global ipm_codekuwaharafilter(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11=0) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codekuwaharafilter@ipmpack),11)
+
+#define global ipm_codekuwaharafilter2(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11=0) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codekuwaharafilter2@ipmpack),11)
+
+#define global ipm_codepixelmove(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13=1,%14=1,%15=1,%16=1,%17=0,%18=0,%19=0,%20=0,%21=0,%22=0,%23=0) \
+prm@ipmpack(0) = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12:\
+prm@ipmpack(12) = int((%13)*0x10000),int((%14)*0x10000),int((%15)*0x10000),int((%16)*0x10000),int((%17)*0x10000),int((%18)*0x10000),int((%19)*0x10000),int((%20)*0x10000),%21,%22,%23:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codepixelmove@ipmpack),23)
+
+#define global ipm_codeordered(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14=0) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,limit(%14,0,1):\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codeordered@ipmpack),14)
+
+#define global ipm_codethinning(%1,%2,%3,%4,%5,%6,%7,%8,%9=0) \
+sdim buff@ipmpack,(%7*%8),2:\
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,varptr(buff@ipmpack(0)),varptr(buff@ipmpack(1)):\
+if (%9=0){val@ipmpack = callfunc(prm@ipmpack,varptr(codethinning2@ipmpack),10)}else{\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codethinning@ipmpack),10)}:\
+sdim buff@ipmpack
+
+#define global ipm_codeslca(%1,%2,%3,%4,%5,%6,%7,%8) \
+sdim buff@ipmpack,((%7+4)*(%8+4))*3,2:\
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,varptr(buff@ipmpack(0)),varptr(buff@ipmpack(1)):\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codeslca@ipmpack),10):sdim buff@ipmpack,128
+
+#define global ipm_codecopy(%1,%2,%3,%4,%5,%6,%7,%8,%9=0x80000000,%10=0x80000000,%11=0x80000000,%12=0x80000000) \
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12:\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codecopy@ipmpack),12)
+
+/**
+ * サポートされた色の数を確認する
+ * @return 現在設定中の画面の色のビット数
+ */
+#uselib "GDI32.DLL"
+#cfunc ipm_GetDeviceCaps "GetDeviceCaps" sptr,int
+#define BITSPIXEL@ipmpack 12
+#define global ipm_m_supportcolor ipm_GetDeviceCaps@ipmpack(hdc,BITSPIXEL@ipmpack)
+
+/**
+ * VRAM変数のデータサイズを調べる
+ * @param p1 VRAMデータの横幅
+ * @param p2 VRAMデータの縦幅
+ * @return 配列の確保に必要なバイト数
+ */
+#define global ctype ipm_m_vramsize(%1,%2) (((((%1)*3)+3)&0xFFFFFFFC)*(%2))
+
+#define global ipm_codediffusion(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14) \
+dim intvram@ipmpack,ipm_m_vramsize(%7,%8):\
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,varptr(intvram@ipmpack):\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codediffusion@ipmpack),15):\
+dim intvram@ipmpack
+
+/**
+ * スクリーンのVRAMデータを割り当てる
+ * @param p1 VRAMデータを割り当てる変数
+ * @param p2 スクリーンID(省略時は選択中のスクリーン)
+ */
+#define global ipm_m_vramget(%1,%2=-1) sdim %1:if(%2<0){mref %1,66}else{mref val@ipmpack,96+%2:\
+dupptr %1,val@ipmpack(5),val@ipmpack(16)>>2,vartype("int")}
+;mref %1,66は、int型配列なので、作成する変数はint型配列にする。
+;int型は32ビットで4バイトなので、全体のサイズ÷ 4を割り当てる。
+
+/**
+ * VRAM変数のように扱う変数を初期化して確保する
+ * @param p1 VRAM変数のように扱いたい変数
+ * @param p2 VRAMデータの横幅
+ * @param p3 VRAMデータの縦幅
+ */
+#define global ipm_m_vraminit(%1,%2,%3) sdim %1,ipm_m_vramsize(%2,%3)
+
+/**
+ * VRAM変数をコピーする
+ * @param p1 コピー先変数
+ * @param p2 コピー元変数
+ * @param p3 VRAMデータの横幅
+ * @param p4 VRAMデータの縦幅
+ */
+#define global ipm_m_vramcopy(%1,%2,%3,%4) memcpy %1,%2,ipm_m_vramsize(%3,%4)
+
+/** 
+ * ipmpack用の命令に使用するために、実数値から整数値に変換する
+ * ipmpackモジュール内では、double値を渡すさいは0x10000倍しなければいけない。
+ * その処理を行う命令。
+ * @param p1 0x10000倍したいdouble型配列変数
+ * @param p2 0x10000倍した値を入れるint型配列変数
+ * @param p3 配列変数の数(省略可能)
+ */
+#deffunc _ipm_m_double2int array p1,array p2,int p3,local p4
+	p4 = p3
+	if(p4 == -1) {
+		p4 = length(p1)
+	}
+	dim p2,p4:repeat p4:p2(cnt)=int(double(p1(cnt))*0x10000):loop
+	return
+#define global ipm_m_double2int(%1,%2,%3=-1) _ipm_m_double2int %1,%2,%3
+
+/**
+ * フィルタ用の3*3の円錐型のコンボリューション行列を作る
+ * @param p1 代入したいdouble型配列変数
+ */
+#define global ipm_f_cone(%1) :\
+	dimtype %1,vartype_double@ipmpack,9:\
+	%1=0.05,0.10,0.05,0.10,0.40,0.10,0.05,0.10,0.05
+
+/**
+ * フィルタ用のn*nの単純平均(simple average)のコンボリューション行列を作る
+ * @param p1 代入したいdouble型配列変数。
+ * @param p2 縦幅×横幅を指定する
+ */
+#define global ipm_f_average(%1,%2) :\
+	dimtype %1,vartype_double@ipmpack,%2:\
+	weight@ipmpack = 1.0/double(%2):repeat %2:%1(cnt)=weight@ipmpack:loop
+
+/**
+ * フィルタ用の3*3のラプラシアンフィルタコンボリューション行列を作る
+ * @param p1 代入したいdouble型配列変数
+ * @param p2 シャープの強度(1.0)
+ */
+#deffunc _ipm_f_laplacian array p1,double p2
+	dimtype p1, vartype_double, 9
+	p1 = 0.0, -p2, 0.0, -p2, p2*4.0+1.0, -p2, 0.0, -p2, 0.0
+	return
+#define global ipm_f_laplacian(%1, %2 = 1.0) _ipm_f_laplacian %1, %2
+
+/**
+ * フィルタ用の3*3のエンボスのコンボリューション行列を作る
+ * @param p1 代入したいdouble型配列変数
+ */
+#define global ipm_f_emboss(%1) :\
+	dimtype %1,vartype_double@ipmpack,9:\
+	%1=-1.0, -1.0, -1.0 , -1.0, 0.0, 1.0, 1.0, 1.0, 1.0
+
+/**
+ * 全体を足した値が1となるように正規化する
+ * @param p1 全体を足した値を1にしたいdouble型配列変数
+ * @param p2 配列変数の数(省略可能)
+ */
+#deffunc _ipm_f_reguconv array reguconv_d,int reguconv_size,local weight,local rep
+	if(reguconv_size==-1):rep = length(reguconv_d):else:rep = reguconv_size
+	weight = 0.0			:repeat rep:weight+=reguconv_d(cnt):loop
+	weight = 1.0 / weight	:repeat rep:reguconv_d(cnt)*=weight:loop
+	return
+#define global ipm_f_reguconv(%1,%2=-1) _ipm_f_reguconv %1,%2
+
+/** 
+ * フィルタ用のn*nの円錐のコンボリューション行列を作る
+ * 中心から外側に向かって線形的に小さくなる
+ * @param p1 代入したいdouble型配列変数。
+ * @param p2 フィルタの口径(n) 奇数の正数のみ
+ */
+#deffunc ipm_f_cone2 array cone2_d,int cone2_n,local x,local y,local cone2_radius
+	dimtype cone2_d,vartype_double@ipmpack,cone2_n*cone2_n
+	cone2_radius = double(cone2_n-1)/2:cone2_radius2 = cone2_radius * cone2_radius:cone2_radius2+=cone2_radius2
+	repeat cone2_n:y=cnt:repeat cone2_n:x=cnt
+	cone2_d(x+y*cone2_n) = cone2_radius2 - ((cone2_radius - x)*(cone2_radius - x) + (cone2_radius - y)*(cone2_radius - y))
+	loop:loop
+	ipm_f_reguconv cone2_d
+	return
+
+/** 
+ * フィルタ用のn*nの円型のコンボリューション行列を作る
+ * @param p1 代入したいdouble型配列変数。
+ * @param p2 フィルタの口径(n=3) 奇数の正数のみ
+ */
+#deffunc _ipm_f_circle array circle_d,int circle_n,local x,local y,local circle_radius
+	dimtype circle_d,vartype_double@ipmpack,circle_n*circle_n
+	circle_radius = (circle_n-1)/2:circle_radius2 = circle_radius * circle_radius
+	repeat circle_n:y=cnt:repeat circle_n:x=cnt
+	if (((circle_radius - x)*(circle_radius - x) + (circle_radius - y)*(circle_radius - y))<=circle_radius2){circle_d(x+y*circle_n)=1.0}
+	loop:loop
+	ipm_f_reguconv circle_d
+	return
+
+#define global ipm_f_circle(%1,%2=3) _ipm_f_circle %1,%2
+
+/** 
+ * フィルタ用のn*nのガウスフィルタのコンボリューション行列を作る
+ * @param p1 代入したいdouble型配列変数。
+ * @param p2 フィルタの口径(n)
+ * @param p3 分散値をdouble型で指定　(σ~2　大きいほどぼける。）
+ */
+#deffunc ipm_f_gauss array makegauss_d,int makegauss_n,double makegauss_b,local x,local y,local gauss
+	dimtype makegauss_d,vartype_double,makegauss_n*makegauss_n
+	dimtype gauss,vartype_double,makegauss_n
+	repeat makegauss_n:gauss(cnt)=expf(double(-(cnt-(makegauss_n/2)))*(cnt-(makegauss_n/2))/makegauss_b/2):loop
+	repeat makegauss_n:y=cnt:repeat makegauss_n:x=cnt:makegauss_d(x+y*makegauss_n)=gauss(x)*gauss(y):loop:loop
+	ipm_f_reguconv makegauss_d
+	return
+
+/**
+ * 色の範囲に制限する
+ * @param p1 制限を行いたい実数値
+ * @return 0から255の整数値
+ */
+#define ctype limits(%1) limit(int(%1),0,255)
+
+/**
+ * テーブルを指定した値で初期化する
+ * @param p1 テーブルに利用したい変数
+ * @param p2 初期化に利用したい値
+ */
+#define global ipm_t_init(%1,%2=0) :\
+	sdim %1,257:\
+	memset %1,limit(%2,0,255),256
+
+/**
+ * 指定した位置を最大となるような△の形になるテーブルを作成する
+ * p2==128で、中心が255となり両端が0となる三角形用のような形になる
+ * @param p1 テーブルの変数
+ * @param p2 最大にしたい位置
+ * @param p3 減衰値
+ */
+#define global ipm_t_initc(%1,%2=255,%3=1) :\
+	sdim %1,257:\
+	repeat (%2+1):poke %1,(%2-cnt),int(limitf(255.0-(%3*cnt),0.0,255.0)):loop:\
+	repeat (256-%2):poke %1,(%2+cnt),int(limitf(255.0-(%3*cnt),0.0,255.0)):loop
+
+/**
+ * コントラスト調整用のテーブルを作成する
+ * @param p1 テーブルに利用したい変数
+ * @param p2 int型の値(一般的には -128～128)
+ */
+#deffunc _ipm_t_contrast var makecontrast_d,int makecontrast_p,local f1,local contrast_min,local contrast_up
+	sdim makecontrast_d,257
+	contrast_min=-makecontrast_p:contrast_max=255-contrast_min
+	contrast_up =double(contrast_max-contrast_min)/256:f1=double(contrast_min)
+	repeat 256:f1+=contrast_up:poke makecontrast_d,cnt,limits(f1):loop
+	return
+#define global ipm_t_contrast(%1,%2=0) _ipm_t_contrast %1,%2
+
+/**
+ * ガンマ調整用のテーブルを作成する
+ * @param p1 テーブルに利用したい変数
+ * @param p2 double型のガンマ値（1.00 が基本値）
+ */
+#deffunc ipm_t_gamma var makegamma_d,double makegamma_p,local f1,local f2
+	sdim makegamma_d,257
+	f2=1.0 / makegamma_p
+	repeat 256:f1=expf(logf(double(cnt)/255)*f2)*256:poke makegamma_d,cnt,limits(f1):loop
+	return
+
+/**
+ * ポスタリゼーション用のテーブルを作成する
+ * @param p1 テーブルに利用したい変数
+ * @param p2 階調の区切り値、通常は2-16あたり。
+ */
+#deffunc ipm_t_posterize var posterize_d,int posterize_p,local f1,local posterize_up,local posterize_sub
+	sdim posterize_d,257
+	posterize_up = double(posterize_p) / 256 :posterize_sub = double(256) / limit(posterize_p,1,256) : f1 = 0.0
+	repeat 256:f1+=posterize_up:poke posterize_d,cnt,limits(int(posterize_sub*int(f1+0.5)+0.5)):loop
+	return
+
+/**
+ * テーブルに指定した値を足す
+ * @param p1 テーブルの変数
+ * @param p2 足したい値
+ */
+#define global ipm_t_add(%1,%2) repeat 256:poke %1,cnt,limit(peek(%1,cnt)+%2,0,255):loop
+#define global ipm_t_plus(%1,%2) ipm_t_add %1,%2
+
+/**
+ * テーブルに指定した値を掛ける
+ * @param p1 テーブルの変数
+ * @param p2 掛けたい値
+ * @param p3 オフセット値(=0)
+ */
+#define global ipm_t_mul(%1,%2,%3=0) repeat 256:poke %1,cnt,limit(int(0.5+%2*peek(%1,cnt)+%3),0,255):loop
+
+/**
+ * パレットの色を設定します。
+ * @param p1 R,赤色(0-255)
+ * @param p2 G,緑色(0-255)
+ * @param p3 B,青色(0-255)
+ */
+#define global ctype ipm_p_color(%1,%2,%3) (limit(%1,0,255)<<16|limit(%2,0,255)<<8|limit(%3,0,255))
+
+/**
+ * パレットの赤色成分を取得する。
+ * @param p1 パレット値(0xRRGGBB)
+ */
+#define global ctype ipm_p_getr(%1) ((%1)>>16&0xff)
+
+/**
+ * パレットの緑色成分を取得する。
+ * @param p1 パレット値(0xRRGGBB)
+ */
+#define global ctype ipm_p_getg(%1) ((%1)>>8&0xff)
+
+/**
+ * パレットの青色成分を取得する。
+ * @param p1 パレット値(0xRRGGBB)
+ */
+#define global ctype ipm_p_getb(%1) ((%1)&0xff)
+
+/**
+ * かぶりにくい数字
+ */
+#define _ipm_a_scale_num 27182818.3
+
+/**
+ * アフィン変換行列を作成し初期化します。
+ * 初期化した行列は単位行列になります。
+ * @param p1 結果を代入する配列変数
+ */
+#define global ipm_a_init(%1) dimtype %1,vartype_double@ipmpack,6:%1(0) = 1.0:%1(3) = 1.0
+
+/**
+ * 縮尺のアフィン変換行列を作成します。
+ * @param p1 結果を代入する配列変数
+ * @param p2 横のスケーリング(省略時は1.0)
+ * @param p3 縦のスケーリング(省略時はp2)
+ */
+#deffunc _ipm_a_scale array p1,double p2,double p3
+	dimtype p1,vartype_double,6
+	p1(0) = p2:if(p3 == _ipm_a_scale_num):p1(3) = p2:else:p1(3) = p3
+	return
+#define global ipm_a_scale(%1,%2=1.0,%3=_ipm_a_scale_num@ipmpack) _ipm_a_scale %1,%2,%3
+
+/**
+ * 移動のアフィン変換行列を作成します。
+ * @param p1 結果を代入する配列変数
+ * @param p2 xの方向(省略時は0.0)
+ * @param p3 yの方向(省略時は0.0)
+ */
+#define global ipm_a_translate(%1,%2=0.0,%3=0.0) dimtype %1,vartype_double@ipmpack,6:%1(0) = 1.0:%1(3) = 1.0:%1(4) = double(%2):%1(5) = double(%3)
+
+/**
+ * 回転のアフィン変換行列を作成します。
+ * @param p1 結果を代入する配列変数
+ * @param p2 角度(弧度で指定)(反時計回り)
+ */
+#define global ipm_a_rotate(%1,%2=0.0) dimtype %1,vartype_double@ipmpack,6:%1(0) = cos(%2):%1(1) = -sin(%2):%1(2) = -%1(1):%1(3) = %1(0)
+
+/**
+ * アフィン変換行列同士を結合します。
+ * @param p1 結果を代入する配列変数
+ * @param p2 結合元のアフィン変換行列
+ * @param p3 結合先のアフィン変換行列
+ */
+#deffunc ipm_a_mul array p1,array p2,array p3,local a,local b
+	dimtype a,vartype_double,6
+	dimtype b,vartype_double,6
+	memcpy a, p2, 48
+	memcpy b, p3, 48
+	dimtype p1,vartype_double,6
+	;0 1
+	;2 3
+	;4 5
+	p1(0) = a(0) * b(0) + a(1) * b(2)
+	p1(1) = a(0) * b(1) + a(1) * b(3)
+	p1(2) = a(2) * b(0) + a(3) * b(2)
+	p1(3) = a(2) * b(1) + a(3) * b(3)
+	p1(4) = a(4) * b(0) + a(5) * b(2) + b(4)
+	p1(5) = a(4) * b(1) + a(5) * b(3) + b(5)
+	return
+
+/**
+ * アフィン変換行列の逆行列を取得。
+ * @param p1 結果を代入する配列変数
+ * @param p2 逆行列を調べたいアフィン変換行列
+ */
+#deffunc ipm_a_inv array p1,array p2,local d
+	dimtype a,vartype_double,6
+	memcpy a, p2, 48
+	dimtype p1,vartype_double,6
+	;0 1
+	;2 3
+	;4 5
+	d = a(0) * a(3) - a(1) * a(2)
+	if(d == 0) {
+		return
+	}
+	d = 1.0 / d
+	p1(0) =   d * a(3)
+	p1(1) =  -d * a(1)
+	p1(2) =  -d * a(2)
+	p1(3) =   d * a(0)
+	p1(4) = -(a(4) * p1(0) + a(5) * p1(2))
+	p1(5) = -(a(4) * p1(1) + a(5) * p1(3))
+	return
+
+#define global ipm_codeaffine(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12=0) \
+aff@ipmpack = int(%11(0)*ipm_a_f),int(%11(1)*ipm_a_f),int(%11(2)*ipm_a_f),int(%11(3)*ipm_a_f),int(%11(4)*ipm_a_f),int(%11(5)*ipm_a_f) :\
+ipm_a_inv inv@ipmpack, %11 :\
+iaff@ipmpack = int(inv@ipmpack(0)*ipm_a_f),int(inv@ipmpack(1)*ipm_a_f),int(inv@ipmpack(2)*ipm_a_f),int(inv@ipmpack(3)*ipm_a_f),int(inv@ipmpack(4)*ipm_a_f),int(inv@ipmpack(5)*ipm_a_f):\
+prm@ipmpack = %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,varptr(aff@ipmpack),%12,varptr(iaff@ipmpack):\
+val@ipmpack = callfunc(prm@ipmpack,varptr(codeaffine@ipmpack),13)
+
+#global
+ipmpackinit
+
+#endif
+//ここまでがモジュールです。

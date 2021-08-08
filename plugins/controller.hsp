@@ -1,0 +1,58 @@
+#include "../pluginhd.as"
+#deffunc entryp int prm_0
+prm_0x=prm_0
+switch (prm_0x>>4)&0xF
+case 0x1
+switch (prm_0x)&0xF
+case 3
+switch paramptr(3)&0xFF
+case 0xB0
+gosub *ctrlportive
+resultx=((stst>>0)&0xFF)
+lpoke pluginconf(4),0,resultx
+lpoke pluginconf(5),0,1
+swbreak
+case 0xB1
+gosub *ctrlportive
+resultx=((stst>>7)&0xFF)
+lpoke pluginconf(4),0,resultx
+lpoke pluginconf(5),0,1
+swbreak
+case 0xB2
+gosub *ctrlportive
+resultx=((stst>>15)&0xFF)
+lpoke pluginconf(4),0,resultx
+lpoke pluginconf(5),0,1
+swbreak
+case 0xB3
+gosub *ctrlportive
+resultx=((stst>>23)&0xFF)
+lpoke pluginconf(4),0,resultx
+lpoke pluginconf(5),0,1
+swbreak
+swend
+swbreak
+swend
+swbreak
+case 0xF
+switch (prm_0x)&0xF
+case 0
+dupptr cmtctrl,lpeek(paramptr(5),0),12,4
+dupptr pluginconfopt,paramptr(6),512,4
+lpoke pluginconfopt(0),0,1
+lpoke pluginconfopt(1),0,0x13
+swbreak
+swend
+swbreak
+swend
+return
+
+*ctrlportive
+dupptr pluginscl,paramptr(2),4096,1
+dupptr pluginconf,paramptr(0),256,4
+dupptr pluginconfopt,paramptr(6),512,4
+//for cntx,0,
+pluginconfopt(120)=0
+gosub pluginscl(6)
+stst=stat
+return

@@ -1,0 +1,461 @@
+//ここからモジュールの開始です。
+#include "ipmpack.hsp"
+
+#ifndef _ipmpackb_@ipmpackb
+
+dummy@ipmpackb = 0
+
+#module "ipmpackb"
+
+#define _ipmpackb_
+
+;┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+;┃ [ ipmpack の処理を使いやすくしたモジュール v1.050 ]
+;┃
+;┃ 利用頻度の高い画像処理のルーチンをまとめた命令集です。
+;┃
+;┃ 詳しい説明は付属のサンプルファイル・HSファイルを参照してください。
+;┃
+;┃[ placeark ]
+;┃ by natade
+;┃ url http://www.placeark.com/
+;┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+#deffunc _ipmpackb_redraw local bmscr
+	bmscr = 0
+	mref bmscr,67
+	redraw bmscr(0) != 1
+	return
+
+//非公開フィルタ処理
+//vram1,vram2 入力と出力
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 フィルタ用テーブルサイズX(奇数値)
+//p6 フィルタ用テーブルサイズY(奇数値)
+//p7,p8,p9		R,G,Bフィルタ用テーブル(奇数個のdouble型配列変数)
+//p10,p11,p12	R,G,Bオフセット値
+//p13 フィルタの計算範囲(0 処理を行う範囲の中 / etc ウィンドウ全体の範囲の中)
+#deffunc __ipmc_filter var vram1,var vram2,int p1,int p2,int p3,int p4,int p5,int p6,array filter_fweightr,array filter_fweightg,array filter_fweightb,int p7,int p8,int p9,int p10,local weighttabler,local weighttableg,local weighttableb
+	ipm_m_double2int filter_fweightr,weighttabler,p5*p6
+	ipm_m_double2int filter_fweightg,weighttableg,p5*p6
+	ipm_m_double2int filter_fweightb,weighttableb,p5*p6
+	ipm_codefilter varptr(vram1),varptr(vram2),p1,p2,p3,p4,ginfo(26),ginfo(27),p5,p6,varptr(weighttabler),varptr(weighttableg),varptr(weighttableb),p7,p8,p9,p10
+	return
+
+//FIRフィルタリング
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 フィルタ用テーブルサイズX(奇数値)
+//p6 フィルタ用テーブルサイズY(奇数値)
+//p7,p8,p9		R,G,Bフィルタ用テーブル(奇数個のdouble型配列変数)
+//p10,p11,p12	R,G,Bオフセット値(省略可能)
+//p13 フィルタの計算範囲(0 処理を行う範囲の中 / etc ウィンドウ全体の範囲の中)(省略可能)
+#deffunc _ipmc_filter int p1,int p2,int p3,int p4,int p5,int p6,array filter_fweightr,array filter_fweightg,array filter_fweightb,int p7,int p8,int p9,int p10,local nowvram,local vrambuf,local bmscr
+	ipm_m_vramget nowvram
+	bmscr = 0
+	mref bmscr,67
+	sdim vrambuf,bmscr(16)
+	memcpy vrambuf,nowvram,bmscr(16)
+	__ipmc_filter nowvram, vrambuf, p1,p2,p3,p4,p5,p6,filter_fweightr,filter_fweightg,filter_fweightb,p7,p8,p9,p10
+	memcpy nowvram,vrambuf,bmscr(16):sdim vrambuf,0
+	_ipmpackb_redraw
+	return
+
+#define global ipmc_filter(%1,%2,%3,%4,%5,%6,%7,%8,%9,%10=0,%11=0,%12=0,%13=0) _ipmc_filter %1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13
+
+//カラーテーブル変換
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5,p6,p7 R,G,Bテーブル(1テーブル計256byte 1byteごとに変換後の値を書き込んだstr型変数)
+#deffunc _ipmc_rgbtable int p1,int p2,int p3,int p4,var rgbtable_r,var rgbtable_g,var rgbtable_b,local nowvram,local address1,local address2
+	address1 = 0
+	address2 = 0
+	if(varptr(rgbtable_g)!=varptr(dummy)) {
+		address1 = varptr(rgbtable_g)
+	}
+	if(varptr(rgbtable_b)!=varptr(dummy)) {
+		address2 = varptr(rgbtable_b)
+	}
+	ipm_m_vramget nowvram
+	ipm_codergbtable varptr(nowvram),varptr(nowvram),p1,p2,p3,p4,ginfo(26),ginfo(27),varptr(rgbtable_r),address1,address2
+	_ipmpackb_redraw
+	return
+#define global ipmc_rgbtable(%1,%2,%3,%4,%5,%6=dummy@ipmpackb,%7=dummy@ipmpackb) _ipmc_rgbtable %1,%2,%3,%4,%5,%6,%7
+#define global ipmc_contrast(%1,%2,%3,%4,%5,%6=dummy@ipmpackb,%7=dummy@ipmpackb) _ipmc_rgbtable %1,%2,%3,%4,%5,%6,%7
+
+//HSV変換（内部計算 H-色相(360度) S-彩度(0-255) V-明度(0-255)）
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 H 色相に足す値(整数値)
+//p6 S 彩度の変換に使うテーブル(1テーブル計256byte 1byteごとに変換後の値を書き込んだstr型変数)
+//p7 V 明度の変換に使うテーブル(1テーブル計256byte 1byteごとに変換後の値を書き込んだstr型変数)
+//※変換式の関係で何度も同じ画像に変換を行うと誤差が発生します。
+#deffunc ipmc_hsv int p1,int p2,int p3,int p4,int ph,var ps,var pv,local nowvram
+	ipm_m_vramget nowvram
+	ipm_codehsv varptr(nowvram),varptr(nowvram),p1,p2,p3,p4,ginfo(26),ginfo(27),ph,varptr(ps),varptr(pv)
+	_ipmpackb_redraw
+	return
+
+//HLS変換（内部計算 H-色相(360度) L-明度(0-255) S-彩度(0-255)）
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 H 色相に足す値(整数値)
+//p6 L 明度の変換に使うテーブル(1テーブル計256byte 1byteごとに変換後の値を書き込んだstr型変数)
+//p7 S 彩度の変換に使うテーブル(1テーブル計256byte 1byteごとに変換後の値を書き込んだstr型変数)
+//※変換式の関係で何度も同じ画像に変換を行うと誤差が発生します。
+#deffunc ipmc_hls int p1,int p2,int p3,int p4,int ph,var pl,var ps,local nowvram
+	ipm_m_vramget nowvram
+	ipm_codehls varptr(nowvram),varptr(nowvram),p1,p2,p3,p4,ginfo(26),ginfo(27),ph,varptr(pl),varptr(ps)
+	_ipmpackb_redraw
+	return
+
+//グレースケール変換
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5,p6,p7 R,G,Bテーブル(1テーブル計256byte 1byteごとに変換後の値を書き込んだstr型変数)
+#deffunc _ipmc_grayscale int p1,int p2,int p3,int p4,var grayscale_r,var grayscale_g,var grayscale_b,local nowvram,local address1,local address2
+	address1 = 0
+	address2 = 0
+	if(varptr(grayscale_g)!=varptr(dummy)) {
+		address1 = varptr(grayscale_g)
+	}
+	if(varptr(grayscale_b)!=varptr(dummy)) {
+		address2 = varptr(grayscale_b)
+	}
+	ipm_m_vramget nowvram
+	ipm_codegrayscale varptr(nowvram),varptr(nowvram),p1,p2,p3,p4,ginfo(26),ginfo(27),varptr(grayscale_r),address1,address2
+	_ipmpackb_redraw
+	return
+#define global ipmc_grayscale(%1,%2,%3,%4,%5,%6=dummy@ipmpackb,%7=dummy@ipmpackb) _ipmc_grayscale %1,%2,%3,%4,%5,%6,%7
+
+//カラーマトリックス変換
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 RGB変換用の9列の行列double型配列変数
+//p5 = R(R*X),R(G*X),R(B*X),G(R*X),G(G*X),G(B*X),B(R*X),B(G*X),B(B*X)
+//p6 オフセットテーブルR,G,B
+#deffunc _ipmc_rgbmatrix int p1,int p2,int p3,int p4,array frgbtable,array offsettable,local rgbtable,local nowvram,local address1
+	ipm_m_double2int frgbtable,rgbtable,9
+	ipm_m_vramget nowvram
+	address1 = 0
+	if(varptr(offsettable)!=varptr(dummy)) {
+		address1 = varptr(offsettable)
+	}
+	ipm_codergbmatrix varptr(nowvram),varptr(nowvram),p1,p2,p3,p4,ginfo(26),ginfo(27),varptr(rgbtable),address1
+	_ipmpackb_redraw
+	return
+#define global ipmc_rgbmatrix(%1,%2,%3,%4,%5,%6=dummy@ipmpackb) _ipmc_rgbmatrix %1,%2,%3,%4,%5,%6
+#define global ipmc_rgb(%1,%2,%3,%4,%5,%6=dummy@ipmpackb) _ipmc_rgbmatrix %1,%2,%3,%4,%5,%6
+
+//簡易スムージング
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_smoothingtype1 int p1,int p2,int p3,int p4,local filter
+	ipm_f_cone filter
+	ipmc_filter p1,p2,p3,p4,3,3,filter,filter,filter,0,0,0,0
+	_ipmpackb_redraw
+	return
+
+//スムージング
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 スムージングに使うフィルターの大きさ(奇数)（大きいほどぼけます）
+#deffunc ipmb_smoothingtype2 int p1,int p2,int p3,int p4,int p5,local filter
+	ipm_f_average filter,p5*p5
+	ipmc_filter p1,p2,p3,p4,p5,p5,filter,filter,filter,0,0,0,0
+	_ipmpackb_redraw
+	return
+
+//スムージング（ガウスフィルタ）
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 int型・大きさ(奇数)
+//p6 double型・分散(σ~2)(高くするほどぼける）
+//※ガウスフィルタの式がよく分からないですが一応動きます。
+#deffunc ipmb_smoothinggauss int p1,int p2,int p3,int p4,int p5,double p6,local filter
+	ipm_f_gauss filter,p5,p6
+	ipmc_filter p1,p2,p3,p4,p5,p5,filter,filter,filter,0,0,0,0
+	_ipmpackb_redraw
+	return
+
+//アンシャープマスキング
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 int型・大きさ(奇数)
+//p6 double型・分散(σ~2)(高くするほど周りの情報を使う）
+#deffunc ipmb_unsharpmasking int p1,int p2,int p3,int p4,int p5,double p6,local filter,local vram,local vram_effect,local vram_effect2
+	ipm_m_vraminit vram_effect,ginfo(26),ginfo(27)
+	ipm_f_gauss filter,p5,p6
+	ipm_m_vramget vram
+	__ipmc_filter vram,vram_effect,p1,p2,p3,p4,p5,p5,filter,filter,filter,0,0,0,0
+	ipm_m_vraminit vram_effect2,ginfo(26),ginfo(27)
+	ipm_codesub varptr(vram),varptr(vram_effect2),p1,p2,p3,p4,ginfo(26),ginfo(27),varptr(vram_effect)
+	ipm_codesub varptr(vram_effect),varptr(vram_effect),p1,p2,p3,p4,ginfo(26),ginfo(27),varptr(vram)
+	ipm_codeadd varptr(vram),varptr(vram),p1,p2,p3,p4,ginfo(26),ginfo(27),varptr(vram_effect2)
+	ipm_codesub varptr(vram),varptr(vram),p1,p2,p3,p4,ginfo(26),ginfo(27),varptr(vram_effect)
+	sdim vram_effect
+	sdim vram_effect2
+	_ipmpackb_redraw
+	return
+
+//シャープフィルタ
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 シャープの強さ(=1.0)
+#deffunc _ipmb_sharp int p1,int p2,int p3,int p4,double p5,local filter
+	ipm_f_laplacian filter, p5
+	ipmc_filter p1,p2,p3,p4,3,3,filter,filter,filter,0,0,0,0
+	_ipmpackb_redraw
+	return
+#define global ipmb_sharp(%1,%2,%3,%4,%5=1.0) _ipmb_sharp %1,%2,%3,%4,%5
+
+//コントラスト調整
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 値(-128～128 int型)
+#deffunc ipmb_contrastadjustment int p1,int p2,int p3,int p4,int contrast,local contrasttable
+	ipm_t_contrast contrasttable,contrast
+	ipmc_rgbtable p1,p2,p3,p4,contrasttable
+	_ipmpackb_redraw
+	return
+
+//ガンマ調整 (gamma adjustment)
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 値(double型)（1.00 が基本値）
+#deffunc ipmb_gammaadjustment int p1,int p2,int p3,int p4,double gamma,local contrasttable
+	ipm_t_gamma contrasttable,gamma
+	ipmc_rgbtable p1,p2,p3,p4,contrasttable
+	_ipmpackb_redraw
+	return
+
+//ネガポジ変換
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_invert int p1,int p2,int p3,int p4,local contrasttable
+	;コントラスト調整のテーブルを逆から作成する。
+	ipm_t_contrast contrasttable,-256
+	ipmc_rgbtable p1,p2,p3,p4,contrasttable
+	_ipmpackb_redraw
+	return
+
+//赤成分抽出
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_extractred int p1,int p2,int p3,int p4,local extracttable1,local extracttable2
+	ipm_t_initc extracttable1,255,1:ipm_t_init extracttable2
+	ipmc_rgbtable p1,p2,p3,p4,extracttable1,extracttable2,extracttable2
+	_ipmpackb_redraw
+	return
+
+//緑成分抽出
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_extractgreen int p1,int p2,int p3,int p4,local extracttable1,local extracttable2
+	ipm_t_initc extracttable1,255,1:ipm_t_init extracttable2
+	ipmc_rgbtable p1,p2,p3,p4,extracttable2,extracttable1,extracttable2
+	_ipmpackb_redraw
+	return
+
+//青成分抽出
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_extractblue int p1,int p2,int p3,int p4,local extracttable1,local extracttable2
+	ipm_t_initc extracttable1,255,1:ipm_t_init extracttable2
+	ipmc_rgbtable p1,p2,p3,p4,extracttable2,extracttable2,extracttable1
+	_ipmpackb_redraw
+	return
+
+//エンボス風
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_emboss int p1,int p2,int p3,int p4,local filter
+	ipm_f_emboss filter
+	ipmc_filter p1,p2,p3,p4,3,3,filter,filter,filter,128,128,128,0
+	_ipmpackb_redraw
+	return
+
+//グレースケール
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_grayscale int p1,int p2,int p3,int p4,local grayscaletable
+	ipm_t_initc grayscaletable
+	ipmc_grayscale p1,p2,p3,p4,grayscaletable
+	_ipmpackb_redraw
+	return
+
+//セピア風
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//セピアの式は適当です。
+#deffunc ipmb_sepiacolor int p1,int p2,int p3,int p4,local grayscaletabler,local grayscaletableg,local grayscaletableb
+	ipm_t_init grayscaletabler:repeat 256:poke grayscaletabler,cnt,limit(cnt*5/2,0,255):loop
+	ipm_t_init grayscaletableg:repeat 256:poke grayscaletableg,cnt,limit(cnt*5/4,0,255):loop
+	ipm_t_init grayscaletableb:repeat 256:poke grayscaletableb,cnt,limit(cnt*5/6,0,255):loop
+	ipmc_grayscale p1,p2,p3,p4,grayscaletabler,grayscaletableg,grayscaletableb
+	_ipmpackb_redraw
+	return
+
+//単純二値化
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 区切り値(0-255)
+#deffunc ipmb_twocolorsimple int p1,int p2,int p3,int p4,int p5,local grayscaletable
+	sdim grayscaletable,256:repeat 256:if (cnt<=p5){poke grayscaletable,cnt,0}else{poke grayscaletable,cnt,255}:loop
+	ipmc_grayscale p1,p2,p3,p4,grayscaletable
+	_ipmpackb_redraw
+	return
+
+//エッジ検出（ラプラシアン）
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_LaplacianEdge int p1,int p2,int p3,int p4,local filter
+	ipm_f_laplacian filter,1.0:filter(4)-=1
+	ipmc_filter p1,p2,p3,p4,3,3,filter,filter,filter,0,0,0,0
+	ipmb_grayscale p1,p2,p3,p4:ipmb_invert p1,p2,p3,p4
+	_ipmpackb_redraw
+	return
+
+//ポスタリゼーション
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 階調の区切り値、通常は2-16あたり。
+#deffunc ipmb_posterize int p1,int p2,int p3,int p4,int p5,local posterizetable
+	ipm_t_posterize posterizetable,p5
+	ipmb_contrastadjustment p1,p2,p3,p4,60
+	ipmc_rgbtable p1,p2,p3,p4,posterizetable
+	_ipmpackb_redraw
+	return
+
+//グレイスケール用のパレットを生成します
+//p1 グレイスケール用で初期化したいパレット
+//p2 グレイスケールの階調
+#deffunc ipmb_makepallet_grayscale array p1,int p2,local a
+	dim p1, p2
+	repeat p2
+		a = cnt*256/(p2-1)
+		p1(cnt)=ipm_p_color(a,a,a)
+	loop
+	return
+
+//メディアンカット法でパレットを生成します
+//p1 作成したパレットを入れる配列
+//p2 色の数(1-256)
+#deffunc ipmb_makepallet_mediancut array p1,int p2,local vram
+	dim p1, p2
+	ipm_m_vramget vram
+	ipm_codemediancut varptr(vram),0,0,ginfo(26),ginfo(27),ginfo(26),ginfo(27),p2,varptr(p1)
+	return
+
+//誤差拡散法で減色する
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 パレット
+//p6 拡散の方法(0 = Floyd & Steinberg, 1 = Jarvis,Judice & Ninke)
+#deffunc ipmb_pallet_diffusion int p1,int p2,int p3,int p4,array p5,int p6,local vram,local pattern_size_x,local pattern_size_y,local pattern_p,local dithp
+	//Floyd & Steinberg
+	if(p6 == 0) {
+		pattern_size_x = 3
+		pattern_size_y = 2
+		pattern_p      = 1
+		dim dithp,(pattern_size_x*pattern_size_y)
+		dithp(0) = 0,0,7
+		dithp(3) = 3,5,1
+	//Jarvis,Judice & Ninke
+	}else {
+		pattern_size_x = 5
+		pattern_size_y = 3
+		pattern_p      = 2
+		dim dithp,(pattern_size_x*pattern_size_y)
+		dithp( 0) = 0,0,0,7,5
+		dithp( 5) = 3,5,7,5,3
+		dithp(10) = 1,3,5,3,1
+	}
+	ipm_m_vramget vram
+	ipm_codediffusion varptr(vram),varptr(vram),p1,p2,p3,p4,ginfo(26),ginfo(27),length(p5),varptr(p5),varptr(dithp),pattern_size_x,pattern_size_y,pattern_p
+	_ipmpackb_redraw
+	return
+
+//単純に減色する
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 パレット
+#deffunc ipmb_pallet int p1,int p2,int p3,int p4,array p5,local vram
+	ipm_m_vramget vram
+	ipm_codepallet varptr(vram),varptr(vram),p1,p2,p3,p4,ginfo(26),ginfo(27),length(p5),varptr(p5)
+	_ipmpackb_redraw
+	return
+
+//組織的ディザ法で減色する
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 パレット
+//p6 色の距離尺度 (0 = ユークリッド距離,1 = マンハッタン距離)
+#deffunc _ipmb_pallet_ordered int p1,int p2,int p3,int p4,array p5,int p6,local vram,local matrix,local matrix_x,local matrix_y
+	;ここをいじることで自分の好きな形の網を使用できる
+	;Bayer
+	matrix_x = 4
+	matrix_y = 4
+	dim matrix,(matrix_x*matrix_y)
+	matrix( 0) =  0, 8, 2,10
+	matrix( 4) = 12, 4,14, 6
+	matrix( 8) =  3,11, 1, 9
+	matrix(12) = 15, 7,13, 5
+	ipm_m_vramget vram
+	;組織的ディザ法で減色
+	ipm_codeordered varptr(vram),varptr(vram),p1,p2,p3,p4,ginfo(26),ginfo(27),length(p5),varptr(p5),varptr(matrix),matrix_x,matrix_y,p6
+	_ipmpackb_redraw
+	return
+#define global ipmb_pallet_ordered(%1, %2, %3, %4, %5, %6 = 0) _ipmb_pallet_ordered %1, %2, %3, %4, %5, %6
+
+//色の数を取得する
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+#deffunc ipmb_colorcount int p1,int p2,int p3,int p4,local out,local vram
+	out = 0
+	ipm_m_vramget vram
+	ipm_colorcount varptr(vram),varptr(out),p1,p2,p3,p4,ginfo(26),ginfo(27)
+	return(out)
+
+//ヒストグラムを取得する
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 生成したヒストグラムを入れる配列
+//p6 赤色の重み係数
+//p7 緑色の重み係数
+//p8 青色の重み係数
+#deffunc _ipmb_histograph int p1,int p2,int p3,int p4,array p5,double p6,double p7,double p8,local vram,local td,local ti
+	;ヒストグラムを入れる変数を宣言
+	dim p5, 256
+	ipm_m_vramget vram
+	ddim td, 3
+	td = p6, p7, p8
+	;正規化(合計を1にする)
+	ipm_f_reguconv td
+	;変換
+	ipm_m_double2int td,ti
+	;値の代入は実数を0x10000倍した整数にする
+	;p2,p3,p4 は p2 + p3 + p4 が 1 になるような値にする。
+	ipm_codehistograph varptr(vram),varptr(p5),p1,p2,p3,p4,ginfo(26),ginfo(27),ti(0),ti(1),ti(2)
+	return
+
+//初期値は輝度値の係数
+//Y = 0.29891 * R + 0.58661 * G + 0.11448 * B を利用する。
+#define global ipmb_histograph(%1,%2,%3,%4,%5,%6 = 0.29891, %7 = 0.58661, %8 = 0.11448) _ipmb_histograph %1, %2, %3, %4, %5, %6, %7, %8
+
+//色相を変換
+//p1,p2 処理を開始する左上の座標(pos x,pos y)
+//p3,p4 処理を行う大きさ(size x,size y)
+//p5 色相に足す値(整数値)
+#deffunc ipmb_hue int p1,int p2,int p3,int p4,int p5,local vram,local table
+	;0,1,2,3,4 ... 254,255 というテーブルを作る
+	ipm_t_initc table, 255, 1
+	ipmc_hsv p1, p2, p3, p4, p5, table, table
+	return
+
+#global
+
+#endif
+//ここまでがモジュールです。

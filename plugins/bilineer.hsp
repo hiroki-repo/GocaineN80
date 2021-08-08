@@ -1,0 +1,29 @@
+#include "../pluginhd.as"
+#deffunc entryp int prm_0
+prm_0x=prm_0
+if prm_0x=0xF0{
+dupptr confptr,paramptr(5),4096,4
+dupptr pluginconfopt,paramptr(6),512,4
+dupptr bfconf,confptr(9),4,4
+dupptr bfconf2,confptr(31),4,4
+dupptr bfconf3,confptr(32),4,4
+notesel configdatatxt
+fname=""+dir_exe+"\\setting.conf"
+exist fname
+if strsize!-1{
+noteload fname
+noteget configur0,0
+lpoke bfconf,0,int(configur0)
+noteget configur0,2
+lpoke bfconf2,0,int(configur0)
+noteget configur0,3
+lpoke bfconf3,0,int(configur0)
+}else{
+lpoke bfconf,0,0
+lpoke bfconf2,0,0
+lpoke bfconf3,0,0
+}
+lpoke pluginconfopt(0),0,1
+lpoke pluginconfopt(1),0,0xF0
+}
+return

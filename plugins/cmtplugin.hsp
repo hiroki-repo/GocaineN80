@@ -1,0 +1,119 @@
+#include "../pluginhd.as"
+#deffunc entryp int prm_0
+prm_0x=prm_0
+if peek(cmtpm,3)&0x4{cmtrxrd=1}else{cmtrxrd=0:cmtrd=1:poke cmtpm,2,0xFF}
+//if cmtrxrd=0{cmtpos=0}
+switch (prm_0x>>4)&0xF
+case 0x0
+cmtrd=cmtrd!cmtrdbak:cmtrdbak=cmtrd
+cmtrxrd=cmtrxrd!cmtrxrdbak:cmtrxrdbak=cmtrxrd
+swbreak
+case 0x1
+if lpeek(cmtstat,0)=0{exist fname:if strsize!-1 and ccc11>=1{bsave fname,binary}:ccc11=0:ccc21=0:ccc12=0:ccc22=0}
+switch (prm_0x)&0xF
+case 2
+/*if (paramptr(3)&0xF1)=0x20{
+dupptr pluginconf,paramptr(0),4*6,4
+cmtfnamesave="":cmtfnamesave=fname
+exist cmtfnamesave
+if strsize=-1{
+bsave cmtfnamesave,pluginconf(4)
+}else{
+bsave cmtfnamesave,pluginconf(4),1,cmtptrs
+}
+cmtptrs+=1
+}else{
+if (paramptr(3)&0xF1)=0x21{
+if paramptr(4)=0x40{cmtptrs=0:cmtpos=-1}
+}
+}
+//if (paramptr(3)&0xF1)=0x30 and lpeek(cmtstat,0)=1{poke binary,ccc,peek(binary,ccc11)|(cmtwr<<ccc21):ccc21+=1:if ccc21>=8{ccc21=0:ccc11+=1}}*/
+swbreak
+case 3
+//if cmtpos>=1{
+/*if cmtpos>=strsize2-3{
+dialog strf("%02X",paramptr(3)&0xFF)}*/
+//if (paramptr(3)&0xF0)=0x40 and lpeek(cmtstat,0)=1{cmtrd=(peek(binary,ccc12)>>ccc22)&0x1:ccc22+=1:if ccc22>=8{ccc22=0:ccc12+=1}}
+/*if (paramptr(3)&0xF1)=0x20{
+dupptr pluginconf,paramptr(0),4*6,4
+lpoke pluginconf(4),0,0xFF
+lpoke pluginconf(5),0,1
+//if cmtrxrd=1{cmtrd=0
+if cmtpos>=strsize2{cmtpos=-1:cmtrd=0}else{
+if cmtpos!-1{
+lpoke pluginconf(4),0,peek(binary,cmtpos)
+lpoke pluginconf(5),0,1}
+cmtpos+=1://cmtrd=1//:cmtrd=cmtrd!cmtrd
+}
+}else{*/
+if (paramptr(3)&0xF1)=0x21{
+dupptr pluginconf,paramptr(0),4*6,4
+lpoke pluginconf(4),0,0x7
+lpoke pluginconf(5),0,1
+}//}
+swbreak
+case 4
+dupptr pluginconf,paramptr(0),4*6,4
+cmtfnamesave="":cmtfnamesave=fname
+exist cmtfnamesave
+if strsize=-1{
+bsave cmtfnamesave,pluginconf(4)
+}else{
+bsave cmtfnamesave,pluginconf(4),1,cmtptrs
+}
+cmtptrs+=1
+swbreak
+case 5
+dupptr pluginconf,paramptr(0),4*6,4
+lpoke pluginconf(4),0,0//0xFF
+lpoke pluginconf(5),0,1
+//if cmtrxrd=1{cmtrd=0
+if cmtpos>=strsize2{cmtpos=-1:cmtrd=0}else{
+if cmtpos!-1{
+lpoke pluginconf(4),0,peek(binary,cmtpos)
+lpoke pluginconf(5),0,1}
+cmtpos+=1://cmtrd=1//:cmtrd=cmtrd!cmtrd
+}
+//}
+//bsave "cmtpm.bin",cmtpm
+//dialog cmtpos
+swbreak
+swend
+swbreak
+case 0x2
+	switch (prm_0x)&0xF
+	case 0x0
+	if paramptr(3)=120{nowdirold=dir_cur:dialog "cmt",16,"Please select PC-8001 cmt file.":chdir nowdirold:if stat=1{cmtptrs=0:cmtpos=-1:fname=refstr:exist fname:strsize2=strsize:if strsize2!-1{sdim binary,strsize2:bload fname,binary:/*:poke cmtpm,1,peek(cmtpm,1)|255*/:cmtrxrd=1}}}
+	swbreak
+	swend
+swbreak
+case 0xF
+switch (prm_0x)&0xF
+case 0
+cmtptrs=0
+cmtrd=1
+fname=dir_cmdline
+cmtpos=-1
+cmtrxrd=1
+dupptr cmtctrl,lpeek(paramptr(5),0),8*256,4
+dupptr cmtrd,cmtctrl(0),4,4
+dupptr cmtwr,cmtctrl(1),4,4
+dupptr cmtpm,cmtctrl(24),4,4
+dupptr cmtrxrd,cmtctrl(25),4,4
+dupptr cmtstat,cmtctrl(2),4,4
+dupptr fddcncted,cmtctrl(4),4,4
+sdim binary,655360
+//poke cmtpm,3,peek(cmtpm,3)|1
+exist fname:strsize2=strsize:if strsize2!-1{sdim binary,strsize2:bload fname,binary:/*:poke cmtpm,1,peek(cmtpm,1)|255*/:cmtrxrd=1}
+dupptr pluginconfopt,paramptr(6),512,4
+lpoke pluginconfopt(0),0,1
+lpoke pluginconfopt(1),0,0x13
+lpoke pluginconfopt(2),0,0x14
+lpoke pluginconfopt(3),0,0x15
+lpoke pluginconfopt(4),0,0x20
+lpoke pluginconfopt(5),0,0x00
+swbreak
+swend
+swbreak
+swend
+return
