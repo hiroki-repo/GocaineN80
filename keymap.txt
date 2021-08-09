@@ -1,0 +1,14 @@
+PC/ATキーボード:PC-8001 キーマップ
+A-Z:A-Z
+Space:Space
+Menu or alt:Graph
+End:Stop
+Home:HOME CLR
+Esc:ESC
+BS:INS DEL
+無変換:カナ
+1-0:1-0
+F1-F5:F1-F5
+Shift:SHIFT
+Enter:RET
+F9:CMT Load

@@ -175,6 +175,9 @@ keymap(229)=0x85
 keymap(16)=0x86
 keymap(17)=0x87
 
+keymap(93)=0x84
+keymap(29)=0x85
+
 keymap(35)=0x90
 keymap(112)=0x91
 keymap(113)=0x92
