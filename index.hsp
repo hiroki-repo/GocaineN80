@@ -217,6 +217,13 @@ vramaddr=0
 othercrtcio=0
 scanlinetype=0
 useoldrender=0
+exsbaddr=0
+exsbaddr2=0
+unusedaddr=0
+vramaddrtc=0
+exsbaddrtc=0
+exsbaddr2tc=0
+unusedaddrtc=0
 sdim memory,65536
 sdim fontrom,0x800
 sdim rom,65536,16
@@ -224,7 +231,7 @@ sdim exrom,65536,2
 upd8251configate=0
 
 dim cassettestateptr,256
-cassettestateptr(0)=varptr(cmtdatard),varptr(cmtdatawr),varptr(cassettemtstate),varptr(cmtbinsnd),varptr(fddconnected),varptr(prtready),varptr(uipin),varptr(uopout),varptr(pch),varptr(grpbfsetting),varptr(crtc2),varptr(crtc3),varptr(rommode),varptr(graphicdraw),varptr(romtype),varptr(grpmode),varptr(colorgraphicmode),varptr(bgcolor),varptr(bankid),varptr(memory),varptr(fontrom),varptr(rom),varptr(exrom(0)),varptr(exrom(1)),varptr(upd8251config),varptr(rxdatareadey),varptr(prtenable),varptr(vramaddr),varptr(othercrtcio),varptr(upd3301cmd),varptr(upd3301prm),varptr(scanlinetype),varptr(useoldrender)
+cassettestateptr(0)=varptr(cmtdatard),varptr(cmtdatawr),varptr(cassettemtstate),varptr(cmtbinsnd),varptr(fddconnected),varptr(prtready),varptr(uipin),varptr(uopout),varptr(pch),varptr(grpbfsetting),varptr(crtc2),varptr(crtc3),varptr(rommode),varptr(graphicdraw),varptr(romtype),varptr(grpmode),varptr(colorgraphicmode),varptr(bgcolor),varptr(bankid),varptr(memory),varptr(fontrom),varptr(rom),varptr(exrom(0)),varptr(exrom(1)),varptr(upd8251config),varptr(rxdatareadey),varptr(prtenable),varptr(vramaddr),varptr(othercrtcio),varptr(upd3301cmd),varptr(upd3301prm),varptr(scanlinetype),varptr(useoldrender),varptr(exsbaddr),varptr(exsbaddr2),varptr(vramaddr),varptr(unusedaddr),varptr(exsbaddrtc),varptr(exsbaddr2tc),varptr(vramaddrtc),varptr(unusedaddrtc)
 
 volhz=2400
 sdim wavdata,(volhz)*100+4*11//0x0158AC*2+8
@@ -864,24 +871,45 @@ case 2*/
 	/*case 0x52
 		bgcolor=(_z80_data>>3)&0x7
 	swbreak*/
-	/*case 0x60
+	case 0x60
+		poke exsbaddr,dma2stackcountes,_z80_data
+		dma2stackcountes=dma2stackcountes+1
+		if dma2stackcountes=2{dma2stackcountes=0}
+	swbreak
 	case 0x61
+		poke exsbaddrtc,dma2stackcountestc,_z80_data
+		dma2stackcountestc=dma2stackcountestc+1
+		if dma2stackcountestc=2{dma2stackcountestc=0}
+	swbreak
 	case 0x62
-	case 0x63*/
+		poke exsbaddr2,dma2stackcountes2,_z80_data
+		dma2stackcountes2=dma2stackcountes2+1
+		if dma2stackcountes2=2{dma2stackcountes2=0}
+	swbreak
+	case 0x63
+		poke exsbaddr2tc,dma2stackcountes2tc,_z80_data
+		dma2stackcountes2tc=dma2stackcountes2tc+1
+		if dma2stackcountes2tc=2{dma2stackcountes2tc=0}
+	swbreak
 	case 0x64
-	/*case 0x65
-	case 0x66
-	case 0x67
-	case 0x69
-	case 0x6A
-	case 0x6B
-	case 0x6C
-	case 0x6D
-	case 0x6E
-	case 0x6F*/
 		poke vramaddr,dma2stackcount,_z80_data
 		dma2stackcount=dma2stackcount+1
 		if dma2stackcount=2{dma2stackcount=0}
+	swbreak
+	case 0x65
+		poke vramaddrtc,dma2stackcounttc,_z80_data
+		dma2stackcounttc=dma2stackcounttc+1
+		if dma2stackcounttc=2{dma2stackcounttc=0}
+	swbreak
+	case 0x66
+		poke unusedaddr,dma2stackcountuu,_z80_data
+		dma2stackcountuu=dma2stackcountuu+1
+		if dma2stackcountuu=2{dma2stackcountuu=0}
+	swbreak
+	case 0x67
+		poke unusedaddrtc,dma2stackcountuutc,_z80_data
+		dma2stackcountuutc=dma2stackcountuutc+1
+		if dma2stackcountuutc=2{dma2stackcountuutc=0}
 	swbreak
 	case 0x68
 		dmamodestat=_z80_data
@@ -1069,6 +1097,54 @@ case 3*/
 		}
 		upd3301statbak=upd3301stat:upd3301stat=0xFF-0x1F
 		return upd3301statbak
+	swbreak
+	case 0x60
+		ret6466x=peek(exsbaddr,dma2stackcountes)
+		dma2stackcountes=dma2stackcountes+1
+		if dma2stackcountes=2{dma2stackcountes=0}
+		return ret6466x
+	swbreak
+	case 0x61
+		ret6466x=peek(exsbaddrtc,dma2stackcountestc)
+		dma2stackcountestc=dma2stackcountestc+1
+		if dma2stackcountestc=2{dma2stackcountestc=0}
+		return ret6466x
+	swbreak
+	case 0x62
+		ret6466x=peek(exsbaddr2,dma2stackcountes2)
+		dma2stackcountes2=dma2stackcountes2+1
+		if dma2stackcountes2=2{dma2stackcountes2=0}
+		return ret6466x
+	swbreak
+	case 0x63
+		ret6466x=peek(exsbaddr2tc,dma2stackcountes2tc)
+		dma2stackcountes2tc=dma2stackcountes2tc+1
+		if dma2stackcountes2tc=2{dma2stackcountes2tc=0}
+		return ret6466x
+	swbreak
+	case 0x64
+		ret6466x=peek(vramaddr,dma2stackcount)
+		dma2stackcount=dma2stackcount+1
+		if dma2stackcount=2{dma2stackcount=0}
+		return ret6466x
+	swbreak
+	case 0x65
+		ret6466x=peek(vramaddrtc,dma2stackcounttc)
+		dma2stackcounttc=dma2stackcounttc+1
+		if dma2stackcounttc=2{dma2stackcounttc=0}
+		return ret6466x
+	swbreak
+	case 0x66
+		ret6466x=peek(unusedaddr,dma2stackcountuu)
+		dma2stackcountuu=dma2stackcountuu+1
+		if dma2stackcountuu=2{dma2stackcountuu=0}
+		return ret6466x
+	swbreak
+	case 0x67
+		ret6466x=peek(unusedaddrtc,dma2stackcountuutc)
+		dma2stackcountuutc=dma2stackcountuutc+1
+		if dma2stackcountuutc=2{dma2stackcountuutc=0}
+		return ret6466x
 	swbreak
 	case 0x68
 		return dmamodestat|((1<<4)*((cntmain\19)>9))
