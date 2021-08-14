@@ -224,6 +224,9 @@ vramaddrtc=0
 exsbaddrtc=0
 exsbaddr2tc=0
 unusedaddrtc=0
+upd31speclzsig=0
+litepeninp=0
+upd3301stat=224
 sdim memory,65536
 sdim fontrom,0x800
 sdim rom,65536,16
@@ -231,7 +234,7 @@ sdim exrom,65536,2
 upd8251configate=0
 
 dim cassettestateptr,256
-cassettestateptr(0)=varptr(cmtdatard),varptr(cmtdatawr),varptr(cassettemtstate),varptr(cmtbinsnd),varptr(fddconnected),varptr(prtready),varptr(uipin),varptr(uopout),varptr(pch),varptr(grpbfsetting),varptr(crtc2),varptr(crtc3),varptr(rommode),varptr(graphicdraw),varptr(romtype),varptr(grpmode),varptr(colorgraphicmode),varptr(bgcolor),varptr(bankid),varptr(memory),varptr(fontrom),varptr(rom),varptr(exrom(0)),varptr(exrom(1)),varptr(upd8251config),varptr(rxdatareadey),varptr(prtenable),varptr(vramaddr),varptr(othercrtcio),varptr(upd3301cmd),varptr(upd3301prm),varptr(scanlinetype),varptr(useoldrender),varptr(exsbaddr),varptr(exsbaddr2),varptr(vramaddr),varptr(unusedaddr),varptr(exsbaddrtc),varptr(exsbaddr2tc),varptr(vramaddrtc),varptr(unusedaddrtc)
+cassettestateptr(0)=varptr(cmtdatard),varptr(cmtdatawr),varptr(cassettemtstate),varptr(cmtbinsnd),varptr(fddconnected),varptr(prtready),varptr(uipin),varptr(uopout),varptr(pch),varptr(grpbfsetting),varptr(crtc2),varptr(crtc3),varptr(rommode),varptr(graphicdraw),varptr(romtype),varptr(grpmode),varptr(colorgraphicmode),varptr(bgcolor),varptr(bankid),varptr(memory),varptr(fontrom),varptr(rom),varptr(exrom(0)),varptr(exrom(1)),varptr(upd8251config),varptr(rxdatareadey),varptr(prtenable),varptr(vramaddr),varptr(othercrtcio),varptr(upd3301cmd),varptr(upd3301prm),varptr(scanlinetype),varptr(useoldrender),varptr(exsbaddr),varptr(exsbaddr2),varptr(vramaddr),varptr(unusedaddr),varptr(exsbaddrtc),varptr(exsbaddr2tc),varptr(vramaddrtc),varptr(unusedaddrtc),varptr(upd31speclzsig),varptr(litepeninp),varptr(upd3301stat)
 
 volhz=2400
 sdim wavdata,(volhz)*100+4*11//0x0158AC*2+8
@@ -259,6 +262,10 @@ mmload "MEM:a.wav",0,1
 
 oncmd gosub *keydown,$100
 oncmd gosub *keyup,$101
+oncmd gosub *clkdownmvup,0x200
+oncmd gosub *clkdownmvup,0x201
+oncmd gosub *clkdownmvup,0x202
+onclick gosub *clkdownmvup
 oncmd gosub *interruptlbl,$113
 buffer 1,640,200,1
 palcolor 0:boxf
@@ -856,6 +863,9 @@ case 2*/
 			seq=5
 			crtcactive=0
 		swbreak
+		case 0x60
+			if ((_z80_data&0xF)&0x01)=0{upd31speclzsig=1}
+		swbreak
 		case 0x80
 			if ((_z80_data&0xF)&0x01)=0{
 				cursx=-1
@@ -1080,7 +1090,16 @@ case 3*/
 			functyper=7|(1<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt):if lpeek(plaginconf,4*5)=1{break}}:loop
 			if lpeek(plaginconfptr,4*5)=1{lpoke plaginconfptr,4*5,0:return lpeek(plaginconfptr,4*4)}else{othercrtcio=0}
 		}
-		return upd3301prm
+		if upd31speclzsig=0{return upd3301prm}else{
+			switch peek(upd31speclzsig,0)
+			case 1
+				ret=peek(litepeninp,peek(upd31speclzsig,1))
+			swbreak
+			swend
+		poke upd31speclzsig,1,peek(upd31speclzsig,1)+1
+		if peek(upd31speclzsig,1)>=2{upd31speclzsig=0:litepeninp=0}
+		return ret
+		}
 	swbreak
 	case 0x51
 	case 0x53
@@ -1804,4 +1823,18 @@ if beepenable=1{
 playingbeep=1
 mmplay 0
 }else{mmstop 0}}else{if beepenable=0{mmstop 0:playingbeep=0}}
+return
+
+*clkdownmvup
+if interruptformt=0{interruptformt=1:interruptformtk=1}
+gselnowjckd=ginfo(3)
+gsel 0,0
+dim lp_ggxy,2
+if wparam=1{
+lparam2=lparam
+lp_ggxy=(wpeek(lparam2,0)*dispysize2(pc8001widthflag|(colorgraphicmode<<1)))/ginfo(12),(wpeek(lparam2,2)*dispysize(grpheight25))/ginfo(13)
+litepeninp=(((vbi<<7)|(lp_ggxy(0)&127))<<0)|((lp_ggxy(1)&63)<<8)
+poke upd3301stat,0,peek(upd3301stat,0)|1
+}
+if interruptformtk=1{interruptformt=0:interruptformtk=0}
 return
