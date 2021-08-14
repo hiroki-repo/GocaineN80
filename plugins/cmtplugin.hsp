@@ -2,16 +2,41 @@
 #deffunc entryp int prm_0
 prm_0x=prm_0
 if peek(cmtpm,3)&0x4{cmtrxrd=1}else{cmtrxrd=0:cmtrd=1:poke cmtpm,2,0xFF}
+if nonoinitial=0{nonoinitial=1
+ldim funccl,16
+ldim funccl1,16
+ldim funccl2,16
+ldim funcclF,16
+for cntx,0,16,1:funccl(cntx)=*nono:funccl1(cntx)=*nono:funccl2(cntx)=*nono:funcclF(cntx)=*nono:next
+funccl(0)=*func_0
+funccl(1)=*func_1
+funccl(2)=*func_2
+funccl(15)=*func_F
+funccl1(2)=*func_1_2
+funccl1(3)=*func_1_3
+funccl1(4)=*func_1_4
+funccl1(5)=*func_1_5
+funccl2(0)=*func_2_0
+funcclF(0)=*func_F_0
 //if cmtrxrd=0{cmtpos=0}
-switch (prm_0x>>4)&0xF
-case 0x0
+//switch (prm_0x>>4)&0xF
+//case 0x0
+}
+goto funccl((prm_0x>>4)&0xF)
+*nono
+return 0
+*func_0
 cmtrd=cmtrd!cmtrdbak:cmtrdbak=cmtrd
 cmtrxrd=cmtrxrd!cmtrxrdbak:cmtrxrdbak=cmtrxrd
-swbreak
-case 0x1
+return
+//swbreak
+//case 0x1
+*func_1
 if lpeek(cmtstat,0)=0{exist fname:if strsize!-1 and ccc11>=1{bsave fname,binary}:ccc11=0:ccc21=0:ccc12=0:ccc22=0}
-switch (prm_0x)&0xF
-case 2
+//switch (prm_0x)&0xF
+//case 2
+goto funccl1((prm_0x)&0xF)
+*func_1_2
 /*if (paramptr(3)&0xF1)=0x20{
 dupptr pluginconf,paramptr(0),4*6,4
 cmtfnamesave="":cmtfnamesave=fname
@@ -28,8 +53,21 @@ if paramptr(4)=0x40{cmtptrs=0:cmtpos=-1}
 }
 }
 //if (paramptr(3)&0xF1)=0x30 and lpeek(cmtstat,0)=1{poke binary,ccc,peek(binary,ccc11)|(cmtwr<<ccc21):ccc21+=1:if ccc21>=8{ccc21=0:ccc11+=1}}*/
-swbreak
-case 3
+if (paramptr(3)&0xF1)=0x20{
+dupptr pluginconf,paramptr(0),4*6,4
+cmtfnamesave="":cmtfnamesave=fname
+exist cmtfnamesave:strsize2=strsize
+if strsize2=-1{
+bsave cmtfnamesave,pluginconf(4),1
+}else{
+bsave cmtfnamesave,pluginconf(4),1,strsize2
+}
+cmtptrs+=1
+}
+if (paramptr(3)&0xF1)=0x21 and paramptr(4)=0x40{h40req=1}
+return//swbreak
+*func_1_3
+//case 3
 //if cmtpos>=1{
 /*if cmtpos>=strsize2-3{
 dialog strf("%02X",paramptr(3)&0xFF)}*/
@@ -50,50 +88,76 @@ if (paramptr(3)&0xF1)=0x21{
 dupptr pluginconf,paramptr(0),4*6,4
 lpoke pluginconf(4),0,0x7
 lpoke pluginconf(5),0,1
-}//}
-swbreak
-case 4
-dupptr pluginconf,paramptr(0),4*6,4
-cmtfnamesave="":cmtfnamesave=fname
-exist cmtfnamesave
-if strsize=-1{
-bsave cmtfnamesave,pluginconf(4)
-}else{
-bsave cmtfnamesave,pluginconf(4),1,cmtptrs
 }
-cmtptrs+=1
-swbreak
-case 5
+/*if (paramptr(3)&0xF1)=0x20{
 dupptr pluginconf,paramptr(0),4*6,4
 lpoke pluginconf(4),0,0//0xFF
 lpoke pluginconf(5),0,1
 //if cmtrxrd=1{cmtrd=0
+if (h40req)=0{
+if cmtpos>=strsize2{cmtpos=-1:cmtrd=0}else{
+if cmtpos!-1{
+lpoke pluginconf(4),0,peek(binary,cmtpos)
+lpoke pluginconf(5),0,1}
+cmtpos+=1://cmtrd=1//:cmtrd=cmtrd!cmtrd
+}:cmtpmbak=lpeek(cmtpm,0)
+}else{h40req=0}
+}*/
+//}
+return//swbreak
+*func_1_4
+//case 4
+dupptr pluginconf,paramptr(0),4*6,4
+cmtfnamesave="":cmtfnamesave=fname
+exist cmtfnamesave:strsize2=strsize
+if strsize2=-1{
+bsave cmtfnamesave,pluginconf(4),1
+}else{
+bsave cmtfnamesave,pluginconf(4),1,strsize2
+}
+cmtptrs+=1
+return//swbreak
+*func_1_5
+//case 5
+dupptr pluginconf,paramptr(0),4*6,4
+lpoke pluginconf(4),0,0xFF
+lpoke pluginconf(5),0,1
+//if cmtrxrd=1{cmtrd=0
+if (h40req)=0{
 if cmtpos>=strsize2{cmtpos=-1:cmtrd=0}else{
 if cmtpos!-1{
 lpoke pluginconf(4),0,peek(binary,cmtpos)
 lpoke pluginconf(5),0,1}
 cmtpos+=1://cmtrd=1//:cmtrd=cmtrd!cmtrd
 }
+}else{h40req=0}
 //}
 //bsave "cmtpm.bin",cmtpm
 //dialog cmtpos
-swbreak
-swend
-swbreak
-case 0x2
-	switch (prm_0x)&0xF
-	case 0x0
-	if paramptr(3)=120{nowdirold=dir_cur:dialog "cmt",16,"Please select PC-8001 cmt file.":chdir nowdirold:if stat=1{cmtptrs=0:cmtpos=-1:fname=refstr:exist fname:strsize2=strsize:if strsize2!-1{sdim binary,strsize2:bload fname,binary:/*:poke cmtpm,1,peek(cmtpm,1)|255*/:cmtrxrd=1}}}
-	swbreak
-	swend
-swbreak
-case 0xF
-switch (prm_0x)&0xF
-case 0
+return
+//swbreak
+//swend
+//swbreak
+*func_2
+goto funccl2((prm_0x)&0xF)
+//case 0x2
+//	switch (prm_0x)&0xF
+//	case 0x0
+*func_2_0
+	if paramptr(3)=120{nowdirold=dir_cur:dialog "cmt",16,"Please select PC-8001 cmt file.":chdir nowdirold:if stat=1{cmtptrs=0:cmtpos=0:fname=refstr:exist fname:strsize2=strsize:if strsize2!-1{sdim binary,strsize2:bload fname,binary:/*:poke cmtpm,1,peek(cmtpm,1)|255*/:cmtrxrd=1}}}
+return//	swbreak
+//	swend
+//swbreak
+//case 0xF
+*func_F
+goto funcclF((prm_0x)&0xF)
+//switch (prm_0x)&0xF
+//case 0
+*func_F_0
 cmtptrs=0
 cmtrd=1
 fname=dir_cmdline
-cmtpos=-1
+cmtpos=0
 cmtrxrd=1
 dupptr cmtctrl,lpeek(paramptr(5),0),8*256,4
 dupptr cmtrd,cmtctrl(0),4,4
@@ -107,13 +171,13 @@ sdim binary,655360
 exist fname:strsize2=strsize:if strsize2!-1{sdim binary,strsize2:bload fname,binary:/*:poke cmtpm,1,peek(cmtpm,1)|255*/:cmtrxrd=1}
 dupptr pluginconfopt,paramptr(6),512,4
 lpoke pluginconfopt(0),0,1
-lpoke pluginconfopt(1),0,0x13
-lpoke pluginconfopt(2),0,0x14
+lpoke pluginconfopt(1),0,0x12
+lpoke pluginconfopt(2),0,0x13
 lpoke pluginconfopt(3),0,0x15
 lpoke pluginconfopt(4),0,0x20
 lpoke pluginconfopt(5),0,0x00
-swbreak
-swend
-swbreak
-swend
+return//swbreak
+//swend
+//swbreak
+//swend
 return
