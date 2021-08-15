@@ -1832,7 +1832,7 @@ gsel 0,0
 dim lp_ggxy,2
 if wparam=1{
 lparam2=lparam
-lp_ggxy=(wpeek(lparam2,0)*dispysize2(pc8001widthflag|(colorgraphicmode<<1)))/ginfo(12),(wpeek(lparam2,2)*dispysize(grpheight25))/ginfo(13)
+lp_ggxy=((wpeek(lparam2,0)*dispysize2(pc8001widthflag|(colorgraphicmode<<1)))/ginfo(12))*((dispysize2(pc8001widthflag|(colorgraphicmode<<1))=40)+1),(wpeek(lparam2,2)*dispysize(grpheight25))/ginfo(13)
 litepeninp=(((vbi<<7)|(lp_ggxy(0)&127))<<0)|((lp_ggxy(1)&63)<<8)
 poke upd3301stat,0,peek(upd3301stat,0)|1
 }
