@@ -1231,6 +1231,7 @@ colourchanged=0
 palletedcolorchkold=256
 cntmaincs+=((blinktimest(blinkingtime))-1)
 vbis=1
+if (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){z80interrupt address,0,2*1}
 if useoldrender=1{
 if graphicdraw=1{
 gsel 1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0
@@ -1781,8 +1782,8 @@ if interruptformt=1{return}
 if wparam2=3 and interruptformt=0{// and emulatorexeci=1{
 interruptformtbak=interruptformt
 interruptformt=1
-if (interruptix\2)=0 and (vbis=1) and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if vbismacs=1{z80interrupt address,0,2*1}:vbis=0}
-if (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){z80interrupt address,0,2*2}
+//if (interruptix\2)=0 and (vbis=1) and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if vbismacs=1{z80interrupt address,0,2*1}:vbis=0}
+if (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){z80interrupt address,0,2*2}
 if (interruptix\3)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){z80interrupt address,0,2*3}
 if (interruptix\5)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){z80interrupt address,0,2*5}
 if vbis=1{vbis=0}
