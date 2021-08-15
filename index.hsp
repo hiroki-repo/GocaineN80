@@ -1836,5 +1836,6 @@ lp_ggxy=(wpeek(lparam2,0)*dispysize2(pc8001widthflag|(colorgraphicmode<<1)))/gin
 litepeninp=(((vbi<<7)|(lp_ggxy(0)&127))<<0)|((lp_ggxy(1)&63)<<8)
 poke upd3301stat,0,peek(upd3301stat,0)|1
 }
+gsel gselnowjckd,0
 if interruptformtk=1{interruptformt=0:interruptformtk=0}
 return
