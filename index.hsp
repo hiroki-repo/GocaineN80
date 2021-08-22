@@ -13,6 +13,7 @@
 #include "user32.as"
 ;#include "kernel32.as"
 #include "hgimg3.as"
+#define __useslowz80jitemulation_flag__
 #module
 #deffunc z80memaccess int prm_0,int prm_1,int prm_2
 _z80_addr@=prm_0
@@ -22,8 +23,10 @@ goto *memoryaccesshnd@
 #global
 #include "z80.as"
 #include "z80jit.as"
+oprestruct=1
 z80jitintervalset 65536
 z80jitintervaljobset *vblupdatejob
+z80jitrectset *vblupdatejob2
 dim palhg,3,256
 #module
 #deffunc fontrend int prm_0
@@ -573,12 +576,13 @@ gsel 0,0
 settimer hwnd,1,333,0
 //settimer hwnd,2,13,0
 settimer hwnd,3,10,0
+//settimer hwnd,4,16,0
 blinktimest(0)=16,32,48,64
 //settimer hwnd,2,25,0
-/*repeat
+repeat
 z80jitrun address
 loop
-end*/
+end
 repeat//cnt*((((blinktimest(blinkingtime)/3)*3)-1)+16)*/:cntmaincs=0
 cntmain=0
 repeat 1000*1000*4:cntmain++//=cnt
@@ -1231,7 +1235,7 @@ colourchanged=0
 palletedcolorchkold=256
 cntmaincs+=((blinktimest(blinkingtime))-1)
 vbis=1
-if (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){z80interrupt address,0,2*1}
+if (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){/*z80interrupt address,0,2*1*/z80jitinterrupt address,2*1}
 if useoldrender=1{
 if graphicdraw=1{
 gsel 1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0
@@ -1407,6 +1411,7 @@ keytemp=keymap(wparam2kdku)
 if keytemp=0xFF{if interruptformtk=1{interruptformt=0:interruptformtk=0}:return}
 keyio((keytemp>>4)&0xF)|=1<<(keytemp&0xF)
 if wparam2kdku=37 or wparam2kdku=40{keytemp=0x86:keyio((keytemp>>4)&0xF)|=1<<(keytemp&0xF)}
+//z80jitinterrupt address,2*3
 if interruptformtk=1{interruptformt=0:interruptformtk=0}
 return
 *keyup
@@ -1421,10 +1426,11 @@ if interruptformtk=1{interruptformt=0:interruptformtk=0}
 return
 
 *z80interruptioncall
-z80interrupt address,0,plaginconf(120,pluginid)
+//z80interrupt address,0,plaginconf(120,pluginid)
+z80jitinterrupt address,plaginconf(120,pluginid)
 return
 *z80nminterruptioncall
-z80nminterrupt address,0
+z80jitnminterrupt address,0
 return
 *z80memoryget
 z80memaccess plaginconf(120,pluginid),0,1
@@ -1780,21 +1786,35 @@ return
 wparam2=wparam
 if interruptformt=1{return}
 if wparam2=3 and interruptformt=0{// and emulatorexeci=1{
+/*if cntmain\32>24{
+vbi=1
+}else{
+vbi=0
+}*/
 interruptformtbak=interruptformt
 interruptformt=1
-//if (interruptix\2)=0 and (vbis=1) and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if vbismacs=1{z80interrupt address,0,2*1}:vbis=0}
-if (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){z80interrupt address,0,2*2}
-if (interruptix\3)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){z80interrupt address,0,2*3}
-if (interruptix\5)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){z80interrupt address,0,2*5}
+//if (interruptix\2)=0 and (vbis=1) and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if vbismacs=1{/*z80interrupt address,0,2*1*/z80jitinterrupt address,2*1}:vbis=0}
+if oprestruct=0{
+if (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){/*z80interrupt address,0,2*2*/z80jitinterrupt address,2*2}
+//if (interruptix\3)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){/*z80interrupt address,0,2*3*/z80jitinterrupt address,2*3}
+if (interruptix\5)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){/*z80interrupt address,0,2*5*/z80jitinterrupt address,2*5}
 if vbis=1{vbis=0}
 emulatorexeci=0
 interruptix+=1:if interruptix>=100{interruptix=0}
+}
 interruptformt=interruptformtbak
 return
 }
 /*if wparam2=2{
 cntmain+=1
 }*/
+if wparam2=4 and interruptformt=0{
+interruptformtbak=interruptformt
+interruptformt=1
+vbi=(vbi=0)
+interruptformt=interruptformtbak
+return
+}
 if wparam2=1 and interruptformt=0{
 interruptformtbak=interruptformt
 interruptformt=1
@@ -1814,8 +1834,37 @@ return
 }
 return
 
-*vblupdatejob
+*vblupdatejob2
+oprestruct=0
+if cntmain\32>24{
+vbi=1
+}else{
+vbi=0
+}
+emulatorexeci=1
+vbismacs=0
+//interruptformt=0
+if cntmain\21000*2=0 and cntmain!0{
+gosub *drawbackground
+gosub *drawforeground
+gosub *bpsoundctlr
+interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+await
+vbis=0
+}
+interruptformt=1:functyper=0|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
 cntmain+=1
+vbismacs=1
+emulatorexeci=0
+oprestruct=1
+return
+*vblupdatejob
+cntmain=0
+/*interruptformt=0
+gosub *drawbackground
+gosub *drawforeground
+interruptformt=1:functyper=2|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+//cntmain+=1*/
 return
 
 *bpsoundctlr

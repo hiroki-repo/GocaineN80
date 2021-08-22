@@ -12,7 +12,7 @@ sdim jitcache,8192*1024
 dim memorystocker,65536
 dim opcodelistaddr,12
 dim opcodelistaddrget,256
-repeat 256:opcodelistaddrget(cnt)=0:loop
+for cntx,0,256,1:opcodelistaddrget(cntx)=0:next
 opcodelistaddrget(0xCB)=1
 opcodelistaddrget(0xDD)=2
 opcodelistaddrget(0xED)=4
@@ -53,6 +53,12 @@ if wpeek(z80jitopcodeaddrgetteraddrdata,0)&0x8000{z80jitopcodeaddr0ptr=lpeek(z80
 opcodelistaddr(6)=z80jitopcodeaddr0ptr
 sdim jitstack,64,2
 ldim jitforjumpaddr,65536
+ldim jitrecchkptr,2
+jitrecchkptr(0)=*z80jitrecp0,*z80jitrecp
+ldim z80freezeblockerjc,2
+z80freezeblockerjc(0)=*z80freezeblockerjc_0,*z80freezeblockerjc_1
+ldim jitintrectptr,2
+jitintrectptr(0)=*jitintrectnone
 z80freezeblocker=0
 return
 #deffunc z80jitintervalset int prm_0
@@ -79,18 +85,35 @@ memcpy jitstack(0),stack@z80moduleaccess(0),64,0,0
 memcpy jitstack(1),stack@z80moduleaccess(1),64,0,0
 return
 *z80jitcream1
-if (memorystocker(wpeek(stack@z80moduleaccess(0),10)&0xFFFF)&0xFF)!z80readmem(wpeek(stack@z80moduleaccess(0),10)){jitcntaddr=jitforjumpaddrx(wpeek(stack@z80moduleaccess(0),10)):compiledaddrz80=wpeek(stack@z80moduleaccess(0),10):gosub *compilegen}
+wpoke stack@z80moduleaccess(0),10,startaddr
+memcpy stack@z80moduleaccess(0),jitstack(0),64,0,0
+memcpy stack@z80moduleaccess(1),jitstack(1),64,0,0
+gosub jitrecchkptr((memorystocker(wpeek(stack@z80moduleaccess(0),10)&0xFFFF)&0xFF)!z80readmem(wpeek(stack@z80moduleaccess(0),10)))
 //if opcodelistaddrget(wpeek(stack@z80moduleaccess(0),10))!0{wpoke stack@z80moduleaccess(0),10,wpeek(stack@z80moduleaccess(0),10)+1}
 wpoke stack@z80moduleaccess(0),10,wpeek(stack@z80moduleaccess(0),10)+1
 return
 *z80jitcream2
+#ifdef __useslowz80jitemulation_flag__
+poke stack@z80moduleaccess(0),14,peek(stack@z80moduleaccess(0),14)+1
+#else
 poke stack@z80moduleaccess(0),14,peek(stack@z80moduleaccess(0),14)+1+(opcodelistaddrget(z80opcodexedchk)!0)
+#endif
+memcpy jitstack(0),stack@z80moduleaccess(0),64,0,0
+memcpy jitstack(1),stack@z80moduleaccess(1),64,0,0
+startaddr=wpeek(stack@z80moduleaccess(0),10)|(startaddr&0xFFFF0000)
+gosub jitintrectptr(lpeek(jitintrectptr(1),0)!0)
+return
+*jitintrectnone
 return
 *z80jitcream3
 return
 *z80jitcream4
-if memorystocker(wpeek(stack@z80moduleaccess(0),10)&0xFFFF)!z80readmem16(wpeek(stack@z80moduleaccess(0),10)){jitcntaddr=jitforjumpaddrx(wpeek(stack@z80moduleaccess(0),10)):compiledaddrz80=wpeek(stack@z80moduleaccess(0),10):gosub *compilegen}
+gosub jitrecchkptr(memorystocker(wpeek(stack@z80moduleaccess(0),10)&0xFFFF)!z80readmem16(wpeek(stack@z80moduleaccess(0),10)))//if memorystocker(wpeek(stack@z80moduleaccess(0),10)&0xFFFF)!z80readmem16(wpeek(stack@z80moduleaccess(0),10)){jitcntaddr=jitforjumpaddrx(wpeek(stack@z80moduleaccess(0),10)):compiledaddrz80=wpeek(stack@z80moduleaccess(0),10):gosub *compilegen}
 opcodeforsubcall@z80moduleaccess=z80readmem(wpeek(stack@z80moduleaccess(0),10)+1):wpoke stack@z80moduleaccess(0),10,wpeek(stack@z80moduleaccess(0),10)+2
+return
+*z80jitrecp
+jitcntaddr=jitforjumpaddrx(wpeek(stack@z80moduleaccess(0),10)):compiledaddrz80=wpeek(stack@z80moduleaccess(0),10):gosub *compilegen
+*z80jitrecp0
 return
 *getjitopcodeaddr0
 opcodeaddr@z80moduleaccess=opcodeaddropa
@@ -117,14 +140,21 @@ return
 z80jitcreamaddr=opcodeaddropa
 return
 *z80jitjumpctrl
-if z80freezeblocker=z80jitinterval{if ((z80jitintervaljobgotoflag>>1)&0x01)=0{await}:z80freezeblocker=0:lpoke startaddr,0,wpeek(stack@z80moduleaccess(0),10):memcpy jitstack(0),stack@z80moduleaccess(0),64,0,0:memcpy jitstack(1),stack@z80moduleaccess(1),64,0,0:if lpeek(z80jitintervaljob,0)!0{if (z80jitintervaljobgotoflag&0x01)=0{gosub z80jitintervaljob}else{goto z80jitintervaljob}}:memcpy stack@z80moduleaccess(0),jitstack(0),64,0,0:memcpy stack@z80moduleaccess(1),jitstack(1),64,0,0:wpoke stack@z80moduleaccess(0),10,startaddr}else{z80freezeblocker+=1}
+gosub z80freezeblockerjc(z80freezeblocker=z80jitinterval)
+//if z80freezeblocker=z80jitinterval{if ((z80jitintervaljobgotoflag>>1)&0x01)=0{await}:z80freezeblocker=0:lpoke startaddr,0,wpeek(stack@z80moduleaccess(0),10):memcpy jitstack(0),stack@z80moduleaccess(0),64,0,0:memcpy jitstack(1),stack@z80moduleaccess(1),64,0,0:if lpeek(z80jitintervaljob,0)!0{if (z80jitintervaljobgotoflag&0x01)=0{gosub z80jitintervaljob}else{goto z80jitintervaljob}}:memcpy stack@z80moduleaccess(0),jitstack(0),64,0,0:memcpy stack@z80moduleaccess(1),jitstack(1),64,0,0:wpoke stack@z80moduleaccess(0),10,startaddr}else{z80freezeblocker+=1}
 if lpeek(jitforjumpaddr(wpeek(stack@z80moduleaccess(0),10)),0)!0{goto jitforjumpaddr(wpeek(stack@z80moduleaccess(0),10))}
+return
+*z80freezeblockerjc_0
+z80freezeblocker+=1
+return
+*z80freezeblockerjc_1
+if ((z80jitintervaljobgotoflag>>1)&0x01)=0{await}:z80freezeblocker=0:lpoke startaddr,0,wpeek(stack@z80moduleaccess(0),10):memcpy jitstack(0),stack@z80moduleaccess(0),64,0,0:memcpy jitstack(1),stack@z80moduleaccess(1),64,0,0:if lpeek(z80jitintervaljob,0)!0{if (z80jitintervaljobgotoflag&0x01)=0{gosub z80jitintervaljob}else{goto z80jitintervaljob}}:memcpy stack@z80moduleaccess(0),jitstack(0),64,0,0:memcpy stack@z80moduleaccess(1),jitstack(1),64,0,0:wpoke stack@z80moduleaccess(0),10,startaddr
 return
 *compiler
 jitcntaddr=0:compiledaddrz80=0
-repeat 65536
-compiledaddrz80=cnt:gosub *compilegen
-loop
+for cntx,0,65536,1
+compiledaddrz80=cntx:gosub *compilegen
+next
 wpoke jitcache,jitcntaddr,0x200F|0x8000:jitcntaddr+=2
 lpoke jitcache,jitcntaddr,0:jitcntaddr+=4
 wpoke jitcache,jitcntaddr,0x0001|0x8000:jitcntaddr+=2
@@ -156,7 +186,11 @@ lpoke jitcache,jitcntaddr,z80jitcreamaddrptr:jitcntaddr+=4
 wpoke jitcache,jitcntaddr,0x0000:jitcntaddr+=2
 wpoke jitcache,jitcntaddr,0x0028:jitcntaddr+=2
 wpoke jitcache,jitcntaddr,0x0004:jitcntaddr+=2
+#ifdef __useslowz80jitemulation_flag__
+wpoke jitcache,jitcntaddr,0:jitcntaddr+=2
+#else
 wpoke jitcache,jitcntaddr,((opcodelistaddrget(z80opcodexedchk)>0)*4):jitcntaddr+=2
+#endif
 wpoke jitcache,jitcntaddr,0x0000:jitcntaddr+=2
 wpoke jitcache,jitcntaddr,0x0029:jitcntaddr+=2
 
@@ -181,13 +215,21 @@ wpoke jitcache,jitcntaddr,0x200F|0x8000:jitcntaddr+=2
 lpoke jitcache,jitcntaddr,1:jitcntaddr+=4
 wpoke jitcache,jitcntaddr,0x0001|0x8000:jitcntaddr+=2
 //lpoke jitcache,jitcntaddr,opcodelistaddr(opcodelistaddrget(z80opcodexedchk)):jitcntaddr+=4
+#ifdef __useslowz80jitemulation_flag__
+lpoke jitcache,jitcntaddr,opcodelistaddr(0):jitcntaddr+=4
+#else
 lpoke jitcache,jitcntaddr,opcodelistaddr(opcodelistaddrget(z80opcodexedchk)):jitcntaddr+=4
+#endif
 //lpoke jitcache,jitcntaddr,opcodelistaddr(0):jitcntaddr+=4
 //if opcodelistaddrget(z80opcodexedchk)!0{z80opcodexedchk=z80readmem(compiledaddrz80+1)}
 wpoke jitcache,jitcntaddr,0x0000:jitcntaddr+=2
 wpoke jitcache,jitcntaddr,0x0028:jitcntaddr+=2
 wpoke jitcache,jitcntaddr,0x0004:jitcntaddr+=2
-if opcodelistaddrget(z80opcodexedchk){wpoke jitcache,jitcntaddr,opcodeforsubcall}else{wpoke jitcache,jitcntaddr,z80opcodexedchk}:jitcntaddr+=2
+#ifdef __useslowz80jitemulation_flag__
+wpoke jitcache,jitcntaddr,z80opcodexedchk:jitcntaddr+=2
+#else
+if opcodelistaddrget(z80opcodexedchk)!0{wpoke jitcache,jitcntaddr,opcodeforsubcall}else{wpoke jitcache,jitcntaddr,z80opcodexedchk}:jitcntaddr+=2
+#endif
 wpoke jitcache,jitcntaddr,0x0000:jitcntaddr+=2
 wpoke jitcache,jitcntaddr,0x0029:jitcntaddr+=2
 
@@ -264,6 +306,10 @@ wpoke jitstack(0),12,wpeek(jitstack(0),12)-2
 wpoke jitstack(0),10,0x66
 poke jitstack(1),14,0
 startaddr=0x66
+return
+
+#deffunc z80jitrectset label prm_0
+jitintrectptr(1)=prm_0
 return
 
 #global
