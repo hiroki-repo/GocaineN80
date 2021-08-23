@@ -317,7 +317,7 @@ gsel 5,0
 hgini
 settingwindowhwnd2=hwnd
 gsel 5,-1
-buffer 3,640,480
+buffer 3,640,400
 buffer 6,640,400
 bgscr 4,mwxs,mwys,0,0,0
 gsel 4,0
@@ -634,9 +634,9 @@ interruptformtbaks=interruptformt:interruptformt=1
 gsel 0,0
 redraw 0
 pos 0,0
-gzoom ginfo(26),ginfo(27),3,0,0,640,480,(grpbfsetting!0)
+gzoom ginfo(26),ginfo(27),3,0,0,640,400,(grpbfsetting!0)
 ;if scanlinetype=1 or grpbfsetting>=43{color 0,0,0:repeat ginfo(27)/2:line -1,cnt*2,ginfo(26),cnt*2:loop}
-if scanlinetype=1 or grpbfsetting>=43{color 0,0,0:repeat ginfo(27)/3:line -1,cnt*3,ginfo(26),cnt*3:loop}
+if scanlinetype=1 or grpbfsetting>=43{color 0,0,0:repeat int(1.0*(ginfo(27)/(1.0*ginfo(27)/400))):line -1,int((1.0*ginfo(27)/400)*cnt),ginfo(26),int((1.0*ginfo(27)/400)*cnt):loop}
 redraw 1
 //if grpbfsetting=2{ipmb_smoothinggauss 0,0,ginfo(26),ginfo(27),3,4.0}
 //gzoom ginfo(26),ginfo(27),1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0,0,8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),8*dispysize(grpheight25),grpbfsetting=1
@@ -1314,7 +1314,7 @@ swend
 //if crtmodectrl=0{}
 gsel 3,0
 pos 0,0
-gzoom 640,480,1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0,0,8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),8*dispysize(grpheight25),(grpbfsetting!0):if grpbfsetting<=1{}else{if grpbfsetting=2{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}else{if grpbfsetting>=3 and grpbfsetting<=12{ipmb_smoothingtype2 0,0,ginfo(26),ginfo(27),(grpbfsetting-1)}else{if grpbfsetting>=13 and grpbfsetting<=22{ipmb_unsharpmasking 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-12)}else{if grpbfsetting>=23 and grpbfsetting<=32{ipmb_smoothinggauss 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-22)}else{if grpbfsetting>=33 and grpbfsetting<=42{ipmb_sharp 0,0,ginfo(26),ginfo(27),double(grpbfsetting-32)}else{if grpbfsetting>=43{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}}}}}}}
+gzoom 640,400,1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0,0,8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),8*dispysize(grpheight25),(grpbfsetting!0):if grpbfsetting<=1{}else{if grpbfsetting=2{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}else{if grpbfsetting>=3 and grpbfsetting<=12{ipmb_smoothingtype2 0,0,ginfo(26),ginfo(27),(grpbfsetting-1)}else{if grpbfsetting>=13 and grpbfsetting<=22{ipmb_unsharpmasking 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-12)}else{if grpbfsetting>=23 and grpbfsetting<=32{ipmb_smoothinggauss 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-22)}else{if grpbfsetting>=33 and grpbfsetting<=42{ipmb_sharp 0,0,ginfo(26),ginfo(27),double(grpbfsetting-32)}else{if grpbfsetting>=43{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}}}}}}}
 redraw 1
 statx+=24000
 }else{gsel 3,0:color 0,0,0:boxf:redraw 1}
@@ -1394,7 +1394,7 @@ hgcapture
 gsel 6,0:pos 0,0:gzoom 8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),int(8*dispysize(grpheight25)),5,0,0,int(15.999999*dispysize2(pc8001widthflag|(colorgraphicmode<<1))),int(16*dispysize(grpheight25))
 gsel 3,0
 pos 0,0
-gzoom 640,480,6,0,0,8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),int(8*dispysize(grpheight25)),(grpbfsetting!0):if grpbfsetting<=1{}else{if grpbfsetting=2{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}else{if grpbfsetting>=3 and grpbfsetting<=12{ipmb_smoothingtype2 0,0,ginfo(26),ginfo(27),(grpbfsetting-1)}else{if grpbfsetting>=13 and grpbfsetting<=22{ipmb_unsharpmasking 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-12)}else{if grpbfsetting>=23 and grpbfsetting<=32{ipmb_smoothinggauss 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-22)}else{if grpbfsetting>=33 and grpbfsetting<=42{ipmb_sharp 0,0,ginfo(26),ginfo(27),double(grpbfsetting-32)}else{if grpbfsetting>=43{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}}}}}}}
+gzoom 640,400,6,0,0,8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),int(8*dispysize(grpheight25)),(grpbfsetting!0):if grpbfsetting<=1{}else{if grpbfsetting=2{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}else{if grpbfsetting>=3 and grpbfsetting<=12{ipmb_smoothingtype2 0,0,ginfo(26),ginfo(27),(grpbfsetting-1)}else{if grpbfsetting>=13 and grpbfsetting<=22{ipmb_unsharpmasking 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-12)}else{if grpbfsetting>=23 and grpbfsetting<=32{ipmb_smoothinggauss 0,0,ginfo(26),ginfo(27),1,double(grpbfsetting-22)}else{if grpbfsetting>=33 and grpbfsetting<=42{ipmb_sharp 0,0,ginfo(26),ginfo(27),double(grpbfsetting-32)}else{if grpbfsetting>=43{ipmb_smoothingtype1 0,0,ginfo(26),ginfo(27)}}}}}}}
 redraw 1
 statx+=24000
 }else{gsel 3,0:color 0,0,0:boxf:redraw 1}
