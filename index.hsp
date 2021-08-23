@@ -635,7 +635,8 @@ gsel 0,0
 redraw 0
 pos 0,0
 gzoom ginfo(26),ginfo(27),3,0,0,640,480,(grpbfsetting!0)
-if scanlinetype=1 or grpbfsetting>=43{color 0,0,0:repeat ginfo(27)/2:line -1,cnt*2,ginfo(26),cnt*2:loop}
+;if scanlinetype=1 or grpbfsetting>=43{color 0,0,0:repeat ginfo(27)/2:line -1,cnt*2,ginfo(26),cnt*2:loop}
+if scanlinetype=1 or grpbfsetting>=43{color 0,0,0:repeat ginfo(27)/3:line -1,cnt*3,ginfo(26),cnt*3:loop}
 redraw 1
 //if grpbfsetting=2{ipmb_smoothinggauss 0,0,ginfo(26),ginfo(27),3,4.0}
 //gzoom ginfo(26),ginfo(27),1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0,0,8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),8*dispysize(grpheight25),grpbfsetting=1
