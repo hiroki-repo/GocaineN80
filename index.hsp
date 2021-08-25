@@ -1243,7 +1243,7 @@ palletedcolorchkold=256
 cntmaincs+=((blinktimest(blinkingtime))-1)
 vbis=1
 if oprestruct=0{
-if (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}
+if (interruptphb&2)!0 and (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}
 }
 if useoldrender=1{
 if graphicdraw=1{
@@ -1810,7 +1810,7 @@ interruptformtbak=interruptformt
 interruptformt=1
 //if (interruptix\2)=0 and (vbis=1) and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if vbismacs=1{if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}:vbis=0}
 if oprestruct=0{
-if (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}
+if (interruptphb&1)!0 and (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}
 if (interruptix\3)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){if usejit=0{z80interrupt address,0,2*3}else{z80jitinterrupt address,2*3,0}}
 if (interruptix\5)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){if usejit=0{z80interrupt address,0,2*5}else{z80jitinterrupt address,2*5,0}}
 if vbis=1{vbis=0}
