@@ -1,7 +1,8 @@
 #include "../pluginhd.as"
 #deffunc entryp int prm_0
 prm_0x=prm_0
-if peek(cmtpm,3)&0x4{cmtrxrd=1}else{cmtrxrd=0:cmtrd=1:poke cmtpm,2,0xFF}
+cmtrxrd=0:cmtrd=1
+//if peek(cmtpm,3)&0x4{cmtrxrd=1}else{cmtrxrd=0:cmtrd=1:poke cmtpm,2,0xFF}
 if nonoinitial=0{nonoinitial=1
 ldim funccl,16
 ldim funccl1,16
@@ -32,7 +33,7 @@ return
 //swbreak
 //case 0x1
 *func_1
-if lpeek(cmtstat,0)=0{exist fname:if strsize!-1 and ccc11>=1{bsave fname,binary}:ccc11=0:ccc21=0:ccc12=0:ccc22=0}
+//if lpeek(cmtstat,0)=0{exist fname:if strsize!-1 and ccc11>=1{bsave fname,binary}:ccc11=0:ccc21=0:ccc12=0:ccc22=0}
 //switch (prm_0x)&0xF
 //case 2
 goto funccl1((prm_0x)&0xF)
@@ -64,7 +65,7 @@ bsave cmtfnamesave,pluginconf(4),1,strsize2
 }
 cmtptrs+=1
 }
-if (paramptr(3)&0xF1)=0x21 and paramptr(4)=0x40{h40req=1}
+if (paramptr(3)&0xF1)=0x21 and ((paramptr(4)&0xFF)=0x40)!0{h40req=1}
 return//swbreak
 *func_1_3
 //case 3
@@ -124,7 +125,7 @@ lpoke pluginconf(4),0,0xFF
 lpoke pluginconf(5),0,1
 //if cmtrxrd=1{cmtrd=0
 if (h40req)=0{
-if cmtpos>=strsize2{cmtpos=-1:cmtrd=0}else{
+if cmtpos>=strsize2{cmtpos=-1/*:cmtrd=0*/}else{
 if cmtpos!-1{
 lpoke pluginconf(4),0,peek(binary,cmtpos)
 lpoke pluginconf(5),0,1}
@@ -144,7 +145,7 @@ goto funccl2((prm_0x)&0xF)
 //	switch (prm_0x)&0xF
 //	case 0x0
 *func_2_0
-	if paramptr(3)=120{nowdirold=dir_cur:dialog "cmt",16,"Please select PC-8001 cmt file.":chdir nowdirold:if stat=1{cmtptrs=0:cmtpos=0:fname=refstr:exist fname:strsize2=strsize:if strsize2!-1{sdim binary,strsize2:bload fname,binary:/*:poke cmtpm,1,peek(cmtpm,1)|255*/:cmtrxrd=1}}}
+	if paramptr(3)=120{nowdirold=dir_cur:dialog "cmt",16,"Please select PC-8001 cmt file.":chdir nowdirold:if stat=1{cmtptrs=0:cmtpos=0:fname=refstr:exist fname:strsize2=strsize:if strsize2!-1{sdim binary,strsize2:bload fname,binary:/*:poke cmtpm,1,peek(cmtpm,1)|255*/:cmtrxrd=1:h40req=1}}}
 return//	swbreak
 //	swend
 //swbreak
