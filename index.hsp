@@ -580,6 +580,7 @@ settimer hwnd,3,10,0
 //settimer hwnd,4,16,0
 blinktimest(0)=16,32,48,64
 //settimer hwnd,2,25,0
+gettine2=gettime(7)
 if usejit!0{
 repeat
 z80jitrun address
@@ -587,6 +588,7 @@ loop
 end
 }else{
 repeat//cnt*((((blinktimest(blinkingtime)/3)*3)-1)+16)*/:cntmaincs=0
+//gettine2=gettime(7)
 cntmain=0
 oprestruct=0
 repeat 1000*1000*4:cntmain++//=cnt
@@ -597,30 +599,64 @@ interruptformt=1
 vbismacs=1
 emulatorexeci=0
 z80run address,0:statx=stat
+//if (gettine\2)=0{
+
+if (cntmain\32)>24{
+vbi=1
+}else{
+vbi=0
+}
+
+//}
+emulatorexeci=1
+vbismacs=0
+//interruptformt=0
+gettine=gettime(7)-gettine2:gettine+=(1000*(gettine<0))
+//if (gettine\16)=0{vbi=(vbi=0)}
+//if (gettine\17)=8{vbi=(vbi=0)}
+/*if (gettine\2){
 if cntmain\32>24{
 vbi=1
 }else{
 vbi=0
 }
-emulatorexeci=1
-vbismacs=0
-//interruptformt=0
-if cntmain\21000*2=0 and cntmain!0{
+
+}*/
+/*if (gettine\125)=0{
+/*if vbi=1{
 gosub *drawbackground
 gosub *drawforeground
-gosub *bpsoundctlr
 interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
 await
 vbis=0
+}*/
+//gosub *bpsoundctlr
+//}
+if cntmain\21001*2=0 and cntmain!0{
+/*gosub *drawbackground
+gosub *drawforeground*/
+if vbi=1{
+gosub *drawbackground
+gosub *drawforeground
+vbis=0
+interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+}else{await}
+gosub *bpsoundctlr
+await
+//interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+//await
+//vbis=0
 }
 interruptformt=1:functyper=0|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
 continue cnt+statx+1
 loop
 await
 interruptformt=0
+if vbi=1{
 gosub *drawbackground
 gosub *drawforeground
 interruptformt=1:functyper=2|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+}
 emulatorexeci=1
 //dialog gettme
 //await
@@ -1237,6 +1273,7 @@ return
 *drawbackground
 interruptformtbakfordw=interruptformt
 interruptformt=1:functyper=1|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=1
+//vbi=1
 emulatorexeci=0
 colourchanged=0
 palletedcolorchkold=256
@@ -1245,6 +1282,7 @@ vbis=1
 if oprestruct=0{
 if (interruptphb&2)!0 and (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}
 }
+gettine=(cntmain\1000)//gettime(7)-gettine2:gettine+=(1000*(gettine<0))
 if useoldrender=1{
 if graphicdraw=1{
 gsel 1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0
@@ -1254,7 +1292,7 @@ redraw 0
 switch videomode
 case 0
 if crtmodectrl=0{palcolor bgcolor:boxf}else{palcolor 8:boxf}
-/*palcolor 7+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):*///if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}
+/*palcolor 7+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):*///if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}
 repeat 20*25:vramattribute((cnt\20),0,(cnt/20))=0:vramattribute((cnt\20),1,(cnt/20))=0:vramattribute((cnt\20),2,(cnt/20))=0:loop:cc128ccbak2=0:cc128ccbak=0:attributeolder=-1:repeat 40:vramattributent(cnt)=0:loop:cc128cc=0:cc128ccc=0:repeat 20*25:if (cnt\20)=0{cc128cc=0}:vramattribute(((cnt\20)*2),2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0):if vramattribute(((cnt\20)*2),2,(cnt/20))&128{cc128cc+=1:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)!0 /*and attributeolder!(cnt/20)*/{vramattributent(cnt/20)=vramattribute(((cnt\20)*2),2,(cnt/20))&127:attributeolder=(cnt/20)}}:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,0,(cnt/20))=vramattribute(((cnt\20)*2),2,(cnt/20))&127}:vramattribute(((cnt\20)*2)+1,2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1):if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,1,(cnt/20))=vramattribute(((cnt\20)*2)+1,2,(cnt/20))}:loop
 executext=0:cntx=0:repeat 80*25:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80){vramattributem((cnt\80),(cnt/80),3)=vramattribute((cntx\20),1,(cnt/80))}:/*loop:executext=0:cntx=0:repeat 80*25:*/cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=0 /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0{vramattributem((cnt\80),(cnt/80),0)=vramattribute((cntx\20),1,(cnt/80))}:if crtmodectrl=0{cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1/* and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 /*and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{vramattributem((cnt\80),(cnt/80),1)=vramattribute((cntx\20),1,(cnt/80))}/*:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1 and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=1{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 and ((vramattribute((cntx\20),1,(cnt/80))&16)!0)=1{vramattributem((cnt\80),(cnt/80),2)=vramattribute((cntx\20),1,(cnt/80))}*/}:grpccnt=cnt
 fontid=z80readmem(vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))
@@ -1271,7 +1309,7 @@ swbreak
 swend
 colourchanged=0
 }
-//if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}}
+//if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}}
 //if grpmode=0{attributedata=vramattributem((cnt\80),(cnt/80),0):palcolor (vramattributem((cnt\80),(cnt/80),1+((attributedata>>7)&0x1))>>5)}
 //dialog attributedata
 //stop
@@ -1281,14 +1319,14 @@ if (((attributedata2&128)!0) and ((attributedata2&8)=0)) or (((attributedata2&16
 repeat 8
 if (fontid>>cnt) & 0x01{boxf (((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*8)+4*(cnt/4),((grpccnt/80)*8)+2*(cnt\4),(((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*8)+4*((cnt/4)+1)-1,((grpccnt/80)*8)+2*((cnt\4)+1)-1}
 loop
-if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){palcolor 0+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7:palletedcolorchkold=256}}}
+if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){palcolor 0+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7:palletedcolorchkold=256}}}
 }else{
-if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}}
+if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}}
 /*fontidx="":lpoke fontidx,0,fontid
 dialog fontidx*/
 if attributedata&0x4{boxf ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8),((grpccnt/80)*8),((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8)+7,(((grpccnt/80)*8)+7):colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}
-if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}}}
-if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (cntmain\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){boxf ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8),((grpccnt/80)*8),((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8)+7,(((grpccnt/80)*8)+7):colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}
+if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}}}
+if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (gettine\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){boxf ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8),((grpccnt/80)*8),((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8)+7,(((grpccnt/80)*8)+7):colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}
 pos ((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*8,(grpccnt/80)*8
 fontrend fontid
 }
@@ -1329,7 +1367,7 @@ redraw 0
 switch videomode
 case 0
 if crtmodectrl=0{palcolor_hg bgcolor:hgrect 0,0,0,mwxs,mwys}else{palcolor_hg 8:hgrect 0,0,0,mwxs,mwys}
-/*palcolor_hg 7+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):*///if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}
+/*palcolor_hg 7+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):*///if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}
 repeat 20*25:vramattribute((cnt\20),0,(cnt/20))=0:vramattribute((cnt\20),1,(cnt/20))=0:vramattribute((cnt\20),2,(cnt/20))=0:loop:cc128ccbak2=0:cc128ccbak=0:attributeolder=-1:repeat 40:vramattributent(cnt)=0:loop:cc128cc=0:cc128ccc=0:repeat 20*25:if (cnt\20)=0{cc128cc=0}:vramattribute(((cnt\20)*2),2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0):if vramattribute(((cnt\20)*2),2,(cnt/20))&128{cc128cc+=1:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)!0 /*and attributeolder!(cnt/20)*/{vramattributent(cnt/20)=vramattribute(((cnt\20)*2),2,(cnt/20))&127:attributeolder=(cnt/20)}}:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,0,(cnt/20))=vramattribute(((cnt\20)*2),2,(cnt/20))&127}:vramattribute(((cnt\20)*2)+1,2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1):if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,1,(cnt/20))=vramattribute(((cnt\20)*2)+1,2,(cnt/20))}:loop
 executext=0:cntx=0:repeat 80*25:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80){vramattributem((cnt\80),(cnt/80),3)=vramattribute((cntx\20),1,(cnt/80))}:/*loop:executext=0:cntx=0:repeat 80*25:*/cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=0 /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0{vramattributem((cnt\80),(cnt/80),0)=vramattribute((cntx\20),1,(cnt/80))}:if crtmodectrl=0{cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1/* and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 /*and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{vramattributem((cnt\80),(cnt/80),1)=vramattribute((cntx\20),1,(cnt/80))}/*:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1 and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=1{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 and ((vramattribute((cntx\20),1,(cnt/80))&16)!0)=1{vramattributem((cnt\80),(cnt/80),2)=vramattribute((cntx\20),1,(cnt/80))}*/}:grpccnt=cnt
 fontid=z80readmem(vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))
@@ -1347,7 +1385,7 @@ swbreak
 swend
 colourchanged=0
 }
-//if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}}
+//if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}}
 //if grpmode=0{attributedata=vramattributem((cnt\80),(cnt/80),0):palcolor_hg (vramattributem((cnt\80),(cnt/80),1+((attributedata>>7)&0x1))>>5)}
 //dialog attributedata
 //stop
@@ -1357,14 +1395,14 @@ if (((attributedata2&128)!0) and ((attributedata2&8)=0)) or (((attributedata2&16
 repeat 8
 if (fontid>>cnt) & 0x01{hgrect (((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*16)+8*(cnt/4)+4,((grpccnt/80)*16)+4*(cnt\4)+2,0,8,4}
 loop
-if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){palcolor_hg 0+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):hgrect ((cursx/((pc8001widthflag=0)+1))*16)+7,int(16*cursy)+8,0,16,16:palletedcolorchkold=256}}}
+if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){palcolor_hg 0+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):hgrect ((cursx/((pc8001widthflag=0)+1))*16)+7,int(16*cursy)+8,0,16,16:palletedcolorchkold=256}}}
 }else{
-if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){hgrect ((cursx/((pc8001widthflag=0)+1))*16)+7,int(16*cursy)+8,0,16,16}}}
+if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){hgrect ((cursx/((pc8001widthflag=0)+1))*16)+7,int(16*cursy)+8,0,16,16}}}
 /*fontidx="":lpoke fontidx,0,fontid
 dialog fontidx*/
 if attributedata&0x4{hgrect ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*16)+7,int(16*(grpccnt/80))+8,0,16,16:colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}
-if cursx!-1 and cursy!-1{if (cntmain\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}}}
-if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (cntmain\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){hgrect ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*16)+7,((grpccnt/80)*16)+8,0,16,16:colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}
+if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}}}
+if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (gettine\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){hgrect ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*16)+7,((grpccnt/80)*16)+8,0,16,16:colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}
 pos ((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*16,int(16*(grpccnt/80))-1
 fontrend_hg fontid
 }
@@ -1808,6 +1846,7 @@ vbi=0
 }*/
 interruptformtbak=interruptformt
 interruptformt=1
+//gosub *bpsoundctlr
 //if (interruptix\2)=0 and (vbis=1) and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if vbismacs=1{if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}:vbis=0}
 if oprestruct=0{
 if (interruptphb&1)!0 and (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}
@@ -1833,9 +1872,12 @@ return
 if wparam2=1 and interruptformt=0{
 interruptformtbak=interruptformt
 interruptformt=1
+//vbi=(vbi=0)
+if vbi=1{
 gosub *drawbackground
 gosub *drawforeground
 interruptformt=1:functyper=2|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+}
 //if funcptruster(8)!0{ldim funcptrusterlbl,1:lpoke funcptrusterlbl,0,funcptruster(8):gosub funcptrusterlbl}else{z80interrupt var_27,var_29,0,0xE0}
 interruptformt=interruptformtbak
 return
