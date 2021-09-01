@@ -13,13 +13,18 @@
 #include "user32.as"
 ;#include "kernel32.as"
 #include "hgimg3.as"
+ldim oaeptr,2
+ldim oaearchptr,1
+oae=0
+oaeptr(0)=*memoryaccesshnd,*oaemah
 #define __useslowz80jitemulation_flag__
 #module
 #deffunc z80memaccess int prm_0,int prm_1,int prm_2
 _z80_addr@=prm_0
 _z80_data@=prm_1
 _z80_accesstype@=prm_2
-goto *memoryaccesshnd@
+goto oaeptr@((oae@)!0)
+//goto *memoryaccesshnd@
 #global
 #include "z80.as"
 #include "z80jit.as"
@@ -238,7 +243,7 @@ sdim exrom,65536,2
 upd8251configate=0
 
 dim cassettestateptr,256
-cassettestateptr(0)=varptr(cmtdatard),varptr(cmtdatawr),varptr(cassettemtstate),varptr(cmtbinsnd),varptr(fddconnected),varptr(prtready),varptr(uipin),varptr(uopout),varptr(pch),varptr(grpbfsetting),varptr(crtc2),varptr(crtc3),varptr(rommode),varptr(graphicdraw),varptr(romtype),varptr(grpmode),varptr(colorgraphicmode),varptr(bgcolor),varptr(bankid),varptr(memory),varptr(fontrom),varptr(rom),varptr(exrom(0)),varptr(exrom(1)),varptr(upd8251config),varptr(rxdatareadey),varptr(prtenable),varptr(vramaddr),varptr(othercrtcio),varptr(upd3301cmd),varptr(upd3301prm),varptr(scanlinetype),varptr(useoldrender),varptr(exsbaddr),varptr(exsbaddr2),varptr(vramaddr),varptr(unusedaddr),varptr(exsbaddrtc),varptr(exsbaddr2tc),varptr(vramaddrtc),varptr(unusedaddrtc),varptr(upd31speclzsig),varptr(litepeninp),varptr(upd3301stat),varptr(usejit)
+cassettestateptr(0)=varptr(cmtdatard),varptr(cmtdatawr),varptr(cassettemtstate),varptr(cmtbinsnd),varptr(fddconnected),varptr(prtready),varptr(uipin),varptr(uopout),varptr(pch),varptr(grpbfsetting),varptr(crtc2),varptr(crtc3),varptr(rommode),varptr(graphicdraw),varptr(romtype),varptr(grpmode),varptr(colorgraphicmode),varptr(bgcolor),varptr(bankid),varptr(memory),varptr(fontrom),varptr(rom),varptr(exrom(0)),varptr(exrom(1)),varptr(upd8251config),varptr(rxdatareadey),varptr(prtenable),varptr(vramaddr),varptr(othercrtcio),varptr(upd3301cmd),varptr(upd3301prm),varptr(scanlinetype),varptr(useoldrender),varptr(exsbaddr),varptr(exsbaddr2),varptr(vramaddr),varptr(unusedaddr),varptr(exsbaddrtc),varptr(exsbaddr2tc),varptr(vramaddrtc),varptr(unusedaddrtc),varptr(upd31speclzsig),varptr(litepeninp),varptr(upd3301stat),varptr(usejit),varptr(oaearchptr),varptr(oae)
 
 volhz=2400
 sdim wavdata,(volhz)*100+4*11//0x0158AC*2+8
@@ -522,6 +527,8 @@ sysfunclbl(26)=*sysfunc_arduino_firm_ver
 sysfunclbl(27)=*sysfunc_hspext
 sysfunclbl(28)=*sysfunc_z80stackpeek
 sysfunclbl(29)=*sysfunc_z80stackpoke
+sysfunclbl(30)=*sysfunc_subz80acs
+sysfunclbl(31)=*sysfunc_subz80acs2
 sysfunctyper=varptr(sysfunclbl)
 sdim plaginconfptr,256
 #ifdef formadgeinitfunc
@@ -688,6 +695,9 @@ redraw 1
 //gzoom ginfo(26),ginfo(27),1+displaydispc(pc8001widthflag|(colorgraphicmode<<1)),0,0,8*dispysize2(pc8001widthflag|(colorgraphicmode<<1)),8*dispysize(grpheight25),grpbfsetting=1
 interruptformt=interruptformtbaks
 return
+*oaemah
+dim oaeaddt,3:oaeaddt(0)=_z80_addr,_z80_data,_z80_accesstype:memfile oaeaddt
+goto oaearchptr
 *memoryaccesshnd
 interruptformtmacbak=interruptformt:interruptformt=1
 //if z80jitfreezeblockerget()\16=0 or cntmain\16=0{
@@ -1303,9 +1313,9 @@ switch videomode
 case 0
 if crtmodectrl=0{palcolor bgcolor:boxf}else{palcolor 8:boxf}
 /*palcolor 7+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):*///if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}
-repeat 20*25:vramattribute((cnt\20),0,(cnt/20))=0:vramattribute((cnt\20),1,(cnt/20))=0:vramattribute((cnt\20),2,(cnt/20))=0:loop:cc128ccbak2=0:cc128ccbak=0:attributeolder=-1:repeat 40:vramattributent(cnt)=0:loop:cc128cc=0:cc128ccc=0:repeat 20*25:if (cnt\20)=0{cc128cc=0}:vramattribute(((cnt\20)*2),2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0):if vramattribute(((cnt\20)*2),2,(cnt/20))&128{cc128cc+=1:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)!0 /*and attributeolder!(cnt/20)*/{vramattributent(cnt/20)=vramattribute(((cnt\20)*2),2,(cnt/20))&127:attributeolder=(cnt/20)}}:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,0,(cnt/20))=vramattribute(((cnt\20)*2),2,(cnt/20))&127}:vramattribute(((cnt\20)*2)+1,2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1):if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,1,(cnt/20))=vramattribute(((cnt\20)*2)+1,2,(cnt/20))}:loop
+repeat 20*25:vramattribute((cnt\20),0,(cnt/20))=0:vramattribute((cnt\20),1,(cnt/20))=0:vramattribute((cnt\20),2,(cnt/20))=0:loop:cc128ccbak2=0:cc128ccbak=0:attributeolder=-1:repeat 40:vramattributent(cnt)=0:loop:cc128cc=0:cc128ccc=0:repeat 20*25:if (cnt\20)=0{cc128cc=0}:z80memaccess (vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0)&0xFFFF,0,1:vramattribute(((cnt\20)*2),2,(cnt/20))=stat/*z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0)*/:if vramattribute(((cnt\20)*2),2,(cnt/20))&128{cc128cc+=1:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)!0 /*and attributeolder!(cnt/20)*/{vramattributent(cnt/20)=vramattribute(((cnt\20)*2),2,(cnt/20))&127:attributeolder=(cnt/20)}}:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,0,(cnt/20))=vramattribute(((cnt\20)*2),2,(cnt/20))&127}:z80memaccess (vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1)&0xFFFF,0,1:vramattribute(((cnt\20)*2)+1,2,(cnt/20))=stat/*z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1)*/:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,1,(cnt/20))=vramattribute(((cnt\20)*2)+1,2,(cnt/20))}:loop
 executext=0:cntx=0:repeat 80*25:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80){vramattributem((cnt\80),(cnt/80),3)=vramattribute((cntx\20),1,(cnt/80))}:/*loop:executext=0:cntx=0:repeat 80*25:*/cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=0 /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0{vramattributem((cnt\80),(cnt/80),0)=vramattribute((cntx\20),1,(cnt/80))}:if crtmodectrl=0{cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1/* and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 /*and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{vramattributem((cnt\80),(cnt/80),1)=vramattribute((cntx\20),1,(cnt/80))}/*:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1 and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=1{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 and ((vramattribute((cntx\20),1,(cnt/80))&16)!0)=1{vramattributem((cnt\80),(cnt/80),2)=vramattribute((cntx\20),1,(cnt/80))}*/}:grpccnt=cnt
-fontid=z80readmem(vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))
+z80memaccess (vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))&0xFFFF,0,1:fontid=stat/*z80readmem(vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))*/
 attributedata=vramattributem((cnt\80),(cnt/80),0) | (vramattributent(cnt/80)&119)
 attributedata2=vramattributem((cnt\80),(cnt/80),3)
 if colourchanged=1 or colorgraphicmode=1{
@@ -1378,9 +1388,9 @@ switch videomode
 case 0
 if crtmodectrl=0{palcolor_hg bgcolor:hgrect 0,0,0,mwxs,mwys}else{palcolor_hg 8:hgrect 0,0,0,mwxs,mwys}
 /*palcolor_hg 7+(0x10*(((vramattributent(cnt/80)>>3)&0x1)=0)):*///if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){boxf ((cursx/((pc8001widthflag=0)+1))*8),(cursy*8),((cursx/((pc8001widthflag=0)+1))*8)+7,(cursy*8)+7}}
-repeat 20*25:vramattribute((cnt\20),0,(cnt/20))=0:vramattribute((cnt\20),1,(cnt/20))=0:vramattribute((cnt\20),2,(cnt/20))=0:loop:cc128ccbak2=0:cc128ccbak=0:attributeolder=-1:repeat 40:vramattributent(cnt)=0:loop:cc128cc=0:cc128ccc=0:repeat 20*25:if (cnt\20)=0{cc128cc=0}:vramattribute(((cnt\20)*2),2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0):if vramattribute(((cnt\20)*2),2,(cnt/20))&128{cc128cc+=1:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)!0 /*and attributeolder!(cnt/20)*/{vramattributent(cnt/20)=vramattribute(((cnt\20)*2),2,(cnt/20))&127:attributeolder=(cnt/20)}}:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,0,(cnt/20))=vramattribute(((cnt\20)*2),2,(cnt/20))&127}:vramattribute(((cnt\20)*2)+1,2,(cnt/20))=z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1):if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,1,(cnt/20))=vramattribute(((cnt\20)*2)+1,2,(cnt/20))}:loop
+repeat 20*25:vramattribute((cnt\20),0,(cnt/20))=0:vramattribute((cnt\20),1,(cnt/20))=0:vramattribute((cnt\20),2,(cnt/20))=0:loop:cc128ccbak2=0:cc128ccbak=0:attributeolder=-1:repeat 40:vramattributent(cnt)=0:loop:cc128cc=0:cc128ccc=0:repeat 20*25:if (cnt\20)=0{cc128cc=0}:z80memaccess (vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0)&0xFFFF,0,1:vramattribute(((cnt\20)*2),2,(cnt/20))=stat/*z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+0)*/:if vramattribute(((cnt\20)*2),2,(cnt/20))&128{cc128cc+=1:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)!0 /*and attributeolder!(cnt/20)*/{vramattributent(cnt/20)=vramattribute(((cnt\20)*2),2,(cnt/20))&127:attributeolder=(cnt/20)}}:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,0,(cnt/20))=vramattribute(((cnt\20)*2),2,(cnt/20))&127}:z80memaccess (vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1)&0xFFFF,0,1:vramattribute(((cnt\20)*2)+1,2,(cnt/20))=stat/*z80readmem(vramaddr+80+((cnt\20)*2)+((cnt/20)*120)+1)*/:if (vramattribute(((cnt\20)*2),2,(cnt/20))&128)=0{vramattribute((cnt\20)-cc128cc,1,(cnt/20))=vramattribute(((cnt\20)*2)+1,2,(cnt/20))}:loop
 executext=0:cntx=0:repeat 80*25:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80){vramattributem((cnt\80),(cnt/80),3)=vramattribute((cntx\20),1,(cnt/80))}:/*loop:executext=0:cntx=0:repeat 80*25:*/cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=0 /*and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=0{vramattributem((cnt\80),(cnt/80),0)=vramattribute((cntx\20),1,(cnt/80))}:if crtmodectrl=0{cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1/* and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 /*and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=0*/{vramattributem((cnt\80),(cnt/80),1)=vramattribute((cntx\20),1,(cnt/80))}/*:cntap=cnt:repeat 20:if vramattribute((cnt\20),0,(cntap/80))<=(cntap\80) and ((vramattribute((cnt\20),1,(cntap/80))&8)!0)=1 and ((vramattribute((cnt\20),1,(cntap/80))&16)!0)=1{cntx=cnt}:loop:if vramattribute((cntx\20),0,(cnt/80))<=(cnt\80) and ((vramattribute((cntx\20),1,(cnt/80))&8)!0)=1 and ((vramattribute((cntx\20),1,(cnt/80))&16)!0)=1{vramattributem((cnt\80),(cnt/80),2)=vramattribute((cntx\20),1,(cnt/80))}*/}:grpccnt=cnt
-fontid=z80readmem(vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))
+z80memaccess (vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))&0xFFFF,0,1:fontid=stat/*z80readmem(vramaddr+(120*(grpccnt/80))+((grpccnt\80)*((displaydispc2(pc8001widthflag|(colorgraphicmode<<1))=0)+1)))*/
 attributedata=vramattributem((cnt\80),(cnt/80),0) | (vramattributent(cnt/80)&119)
 attributedata2=vramattributem((cnt\80),(cnt/80),3)
 if colourchanged=1 or colorgraphicmode=1{
@@ -1843,6 +1853,30 @@ return
 return stackpeek(0,plaginconf(120,pluginid),plaginconf(121,pluginid))
 *sysfunc_z80stackpoke
 stackpoke 0,plaginconf(120,pluginid),plaginconf(121,pluginid),plaginconf(122,pluginid)
+return
+*sysfunc_subz80acs
+dupptr address4sz80,plaginconf(120,pluginid),4,4
+return z80run_c(address4sz80,plaginconf(121,pluginid)+1)
+*sysfunc_subz80acs2
+switch plaginconf(120,pluginid)
+case 0
+return stackpeek(plaginconf(121,pluginid)+1,plaginconf(122,pluginid),plaginconf(123,pluginid))
+swbreak
+case 1
+stackpoke plaginconf(121,pluginid)+1,plaginconf(122,pluginid),plaginconf(123,pluginid),plaginconf(124,pluginid)
+return 0
+swbreak
+case 2
+dupptr address4sz80,plaginconf(121,pluginid),4,4
+z80interrupt address4sz80,plaginconf(122,pluginid),plaginconf(123,pluginid)
+return 0
+swbreak
+case 3
+dupptr address4sz80,plaginconf(121,pluginid),4,4
+z80nminterrupt address4sz80,plaginconf(122,pluginid)
+return 0
+swbreak
+swend
 return
 
 *interruptlbl
