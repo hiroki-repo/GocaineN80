@@ -1093,7 +1093,7 @@ case 2*/
 	if (fc_i8255view&128)!0{
 		switch (fc_ptabcmode>>1)&3
 		case 0
-			functyper=0|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*4,_z80_data&((((fc_portabcrw&1)!0)*0xFF)):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
+			functyper=0|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*4,_z80_data&((((fc_portabcrw&1)=0)*0xFF)):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
 		swbreak
 		case 1
 			i8255md1sigbufa=_z80_data&0xFF
@@ -1112,7 +1112,7 @@ case 2*/
 	case 0xFD
 	if (fc_i8255view&128)!0{
 		if ((fc_ptabcmode>>3)&1)=0{
-			functyper=1|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*4,_z80_data&((((fc_portabcrw&2)!0)*0xFF)):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
+			functyper=1|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*4,_z80_data&((((fc_portabcrw&2)=0)*0xFF)):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
 		}else{
 			//functyper=1|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*4,_z80_data:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
 			i8255md1sigbufb=_z80_data&0xFF
@@ -1125,14 +1125,14 @@ case 2*/
 *writefdc8255io_pc
 		i8255md1sig=_z80_data&0xFF
 			if ((fc_ptabcmode>>3)&1)=0 and ((fc_ptabcmode>>1)&3)!0{
-				functyper=2|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,0:lpoke plaginconfptr,4*4,(_z80_data)&(((fc_portabcrw&8)!0)*0x3):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
+				functyper=2|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,0:lpoke plaginconfptr,4*4,(_z80_data)&(((fc_portabcrw&8)=0)*0x3):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
 			}
 		switch (fc_ptabcmode>>1)&3
 		case 0
 			if ((fc_ptabcmode>>3)&1)=0{
-				functyper=2|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,0:lpoke plaginconfptr,4*4,(_z80_data)&((((fc_portabcrw&8)!0)*0xF)|(((fc_portabcrw&4)!0)*0xF0)):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
+				functyper=2|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,0:lpoke plaginconfptr,4*4,(_z80_data)&((((fc_portabcrw&8)=0)*0xF)|(((fc_portabcrw&4)=0)*0xF0)):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
 			}else{
-				functyper=2|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,0:lpoke plaginconfptr,4*4,(_z80_data)&(((fc_portabcrw&8)!0)*0xF):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
+				functyper=2|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,0:lpoke plaginconfptr,4*4,(_z80_data)&(((fc_portabcrw&8)=0)*0xF):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop
 			}
 		swbreak
 		case 1
@@ -1366,8 +1366,8 @@ case 3*/
 			lpoke plaginconfptr,4*4,0
 			lpoke plaginconfptr,4*5,0
 			functyper=3|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt):if lpeek(plaginconf,4*5)=1{break}}:loop
-			if lpeek(plaginconfptr,4*5)=1{lpoke plaginconfptr,4*5,0:return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&1)=0)*0xFF))}
-			return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&1)=0)*0xFF))
+			if lpeek(plaginconfptr,4*5)=1{lpoke plaginconfptr,4*5,0:return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&1)!0)*0xFF))}
+			return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&1)!0)*0xFF))
 		swbreak
 		case 1
 			i8255md1sigbufaold=i8255md1sigbufa:i8255md1sigbufa=0
@@ -1390,8 +1390,8 @@ case 3*/
 			lpoke plaginconfptr,4*4,0
 			lpoke plaginconfptr,4*5,0
 			functyper=4|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,_z80_addr:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt):if lpeek(plaginconf,4*5)=1{break}}:loop
-			if lpeek(plaginconfptr,4*5)=1{lpoke plaginconfptr,4*5,0:return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&2)=0)*0xFF))}
-			return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&2)=0)*0xFF))
+			if lpeek(plaginconfptr,4*5)=1{lpoke plaginconfptr,4*5,0:return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&2)!0)*0xFF))}
+			return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&2)!0)*0xFF))
 		}else{
 			i8255md1sigbufbold=i8255md1sigbufb:i8255md1sigbufb=0
 			i8255md1sig|=0x01
@@ -1407,8 +1407,8 @@ case 3*/
 				lpoke plaginconfptr,4*4,0
 				lpoke plaginconfptr,4*5,0
 				functyper=5|(3<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*3,(fc_bsrmode&7):lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt):if lpeek(plaginconf,4*5)=1{break}}:loop
-				if lpeek(plaginconfptr,4*5)=1{lpoke plaginconfptr,4*5,0:return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&8)=0)*0xF)|(((fc_portabcrw&4)=0)*0xF0))|(i8255md1sig&0xF)}
-				return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&8)=0)*0xF)|(((fc_portabcrw&4)=0)*0xF0))|(i8255md1sig&0xF)
+				if lpeek(plaginconfptr,4*5)=1{lpoke plaginconfptr,4*5,0:return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&8)!0)*0xF)|(((fc_portabcrw&4)!0)*0xF0))|(i8255md1sig&0xF)}
+				return lpeek(plaginconfptr,4*4)&((((fc_portabcrw&8)!0)*0xF)|(((fc_portabcrw&4)!0)*0xF0))|(i8255md1sig&0xF)
 			swbreak
 			case 1
 				return (i8255md1sig&0xFF)
