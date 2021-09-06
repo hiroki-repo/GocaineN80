@@ -100,6 +100,12 @@ z80hltendset 0,2
 repeat 255:z80hltendset (cnt+1),2:loop
 dim rtctimetmp,6
 dim rtctime,6
+dim rtctimeforminus,5
+rtctimeforminus(0)=0
+rtctimeforminus(1)=0
+rtctimeforminus(2)=0
+rtctimeforminus(3)=0
+rtctimeforminus(4)=0
 dim keyio,16
 dim keymap,256
 repeat 256:keymap(cnt)=0xFF:loop
@@ -1442,19 +1448,25 @@ swend*/
 return
 
 *rtcstrobe
+dim rtctimeforminusck,5:rtctimeforminusck(0)=6,5,4,3,1
+dim rtctimeforminusck3,5:rtctimeforminusck3(0)=59,59,23,31,12
+dim rtctimeforminusck2,5:repeat 5:rtctimeforminusck2(cnt)=(gettime(rtctimeforminusck(cnt))+rtctimeforminus(cnt))\(rtctimeforminusck3(cnt)+1):loop
 switch pch & 0xF
 case 1
 rtcpos=0
 dim rtctimetmp,5
-rtctime(4)=gettime(1)<<4
-rtctime(3)=((gettime(3)/10)<<4)+gettime(3)\10
-rtctime(2)=((gettime(4)/10)<<4)+gettime(4)\10
-rtctime(1)=((gettime(5)/10)<<4)+gettime(5)\10
-rtctime(0)=((gettime(6)/10)<<4)+gettime(6)\10
+rtctime(4)=rtctimeforminusck2(4)<<4
+rtctime(3)=((rtctimeforminusck2(3)/10)<<4)+rtctimeforminusck2(3)\10
+rtctime(2)=((rtctimeforminusck2(2)/10)<<4)+rtctimeforminusck2(2)\10
+rtctime(1)=((rtctimeforminusck2(1)/10)<<4)+rtctimeforminusck2(1)\10
+rtctime(0)=((rtctimeforminusck2(0)/10)<<4)+rtctimeforminusck2(0)\10
 rtcdata=rtctime(0)&0x01
 swbreak
 case 2
 repeat 5:rtctime(cnt)=rtctimetmp(cnt):loop
+repeat 5
+if cnt!4{rtctimeforminus(cnt)=(((rtctime(cnt)>>4)*10)+(rtctime(cnt)&15))-gettime(rtctimeforminusck(cnt))}else{rtctimeforminus(cnt)=(rtctime(cnt)>>4)-gettime(rtctimeforminusck(cnt))}
+loop
 swbreak
 swend
 return
