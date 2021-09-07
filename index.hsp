@@ -13,6 +13,13 @@
 #include "user32.as"
 ;#include "kernel32.as"
 #include "hgimg3.as"
+#uselib "crtdll.dll"
+#cfunc time "time" int
+#cfunc mktime "mktime" int
+#cfunc localtime "localtime" int
+#cfunc gmtime "gmtime" int
+dim timexforch1,9
+timexforch1(0)=gettime(6),gettime(5),gettime(4),gettime(3),gettime(1)-1,gettime(0)-1909,0,0,0
 ldim oaeptr,2
 ldim oaearchptr,1
 oae=0
@@ -1448,9 +1455,13 @@ swend*/
 return
 
 *rtcstrobe
+dim timezforch1,9
+timezforch1(0)=rtctimeforminus(0)\60,rtctimeforminus(1)\60,rtctimeforminus(2)\24,rtctimeforminus(3)\32,(rtctimeforminus(4)-1)\12,71,0,0,0
+timerforch123=time(0)-mktime(varptr(timexforch1))+mktime(varptr(timezforch1))
+dupptr timey,localtime(varptr(timerforch123)),36,4
 dim rtctimeforminusck,5:rtctimeforminusck(0)=6,5,4,3,1
 dim rtctimeforminusck3,5:rtctimeforminusck3(0)=59,59,23,31,12
-dim rtctimeforminusck2,5:repeat 5:rtctimeforminusck2(cnt)=(gettime(rtctimeforminusck(cnt))+rtctimeforminus(cnt))\(rtctimeforminusck3(cnt)+1):loop
+dim rtctimeforminusck2,5:rtctimeforminusck2(0)=timey(0):rtctimeforminusck2(1)=timey(1):rtctimeforminusck2(2)=timey(2):rtctimeforminusck2(3)=timey(3):rtctimeforminusck2(4)=timey(4)+1//repeat 5:rtctimeforminusck2(cnt)=(gettime(rtctimeforminusck(cnt))+rtctimeforminus(cnt))\(rtctimeforminusck3(cnt)+1):loop
 switch pch & 0xF
 case 1
 rtcpos=0
@@ -1465,7 +1476,7 @@ swbreak
 case 2
 repeat 5:rtctime(cnt)=rtctimetmp(cnt):loop
 repeat 5
-if cnt!4{rtctimeforminus(cnt)=(((rtctime(cnt)>>4)*10)+(rtctime(cnt)&15))-gettime(rtctimeforminusck(cnt))}else{rtctimeforminus(cnt)=(rtctime(cnt)>>4)-gettime(rtctimeforminusck(cnt))}
+if cnt!4{rtctimeforminus(cnt)=(((rtctime(cnt)>>4)*10)+(rtctime(cnt)&15))}else{rtctimeforminus(cnt)=(rtctime(cnt)>>4)}
 loop
 swbreak
 swend
