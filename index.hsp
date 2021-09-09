@@ -627,22 +627,24 @@ repeat 60
 interruptformt=1
 vbismacs=1
 emulatorexeci=0
-repeat 65536:cntmain++//=cnt
+vbi=1
+repeat 65536*4:cntmain++//=cnt
 //gosub *bpsoundctlr
-if (cntmain\32)>24{
+if (cntmain\2)=0{
 vbi=1
 }else{
 vbi=0
 }
+//if (cntmain\32768)=0 and cntmain!0{gosub *bpsoundctlr}
 continue cnt+z80run_c(address,0)//+1
 loop
 vbi=0
-repeat 65536:cntmain++//=cnt
+//repeat 8192:cntmain++//=cnt
 //cntmaincs=cnt\((blinktimest(blinkingtime)))
 //if cnt\18000=0{await}
 //z80run address,0:statx=stat
 //gosub *bpsoundctlr
-continue cnt+z80run_c(address,0)//+1
+//continue cnt+z80run_c(address,0)//+1
 //if (gettine\2)=0{
 //if (gettme\16)>12{vbirde=1}else{vbirde=0}
 //if (gettme\16)=15{vbi=0}
@@ -650,13 +652,13 @@ continue cnt+z80run_c(address,0)//+1
 //if (cntmain\30666)>30600{vbi=0}
 //if (cnt\30666)<(30000){
 //if (gettme\16)=0{
-loop
+//loop
 /*if (cntmain\32)>24{
 vbi=1
 }else{
 vbi=0
 }*/
-vbi=1
+//vbi=1
 //}
 emulatorexeci=1
 vbismacs=0
@@ -696,7 +698,7 @@ interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plagi
 //vbi=1
 //if cnt\((133330))>133300 and cntmain!0{
 //if vbirde=1{
-if vbi=1{
+if vbi=0{
 gosub *drawbackground
 gosub *drawforeground
 vbis=0//:gosub *bpsoundctlr
@@ -713,7 +715,11 @@ vbis=0
 //vbirde=0
 //}//else{if (gettme\16)<4{vbi=0}}
 interruptformt=1:functyper=0|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
-if (cnt\3)=2 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){if usejit=0{z80interrupt address,0,2*3}else{z80jitinterrupt address,2*3,0}}else{if (cnt\5)=4 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){if usejit=0{z80interrupt address,0,2*5}else{z80jitinterrupt address,2*5,0}}}
+//if (cnt\3)=2 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){if usejit=0{z80interrupt address,0,2*3}else{z80jitinterrupt address,2*3,0}}else{if (cnt\5)=4 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){if usejit=0{z80interrupt address,0,2*5}else{z80jitinterrupt address,2*5,0}}}
+repeat 8192:cntmain++//=cnt
+continue cnt+z80run_c(address,0)//+1
+loop
+gosub *bpsoundctlr
 loop
 if (interruptphb&1)!0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}
 await
