@@ -97,6 +97,333 @@ if cnt=3 or cnt=7{palette cnt+0x10,0,0,0,(cnt=7)}else{palette cnt+0x10,((cnt>>0)
 loop
 
 #include "ipmpackb.hsp"
+#ifndef _WAVEOUT_H_
+#define _WAVEOUT_H_
+;(winmm.as)
+#ifdef __hsp30__
+#ifndef __WINMM__
+#define global __WINMM__
+#uselib "WINMM.DLL"
+	#func global CloseDriver "CloseDriver" sptr,sptr,sptr
+	#func global DefDriverProc "DefDriverProc" sptr,sptr,sptr,sptr,sptr
+	#func global DriverCallback "DriverCallback" sptr,sptr,sptr,sptr,sptr,sptr,sptr
+	#func global DrvGetModuleHandle "DrvGetModuleHandle" sptr
+	#func global GetDriverModuleHandle "GetDriverModuleHandle" sptr
+	#func global MigrateAllDrivers "MigrateAllDrivers"
+	#func global MigrateMidiUser "MigrateMidiUser"
+	#func global MigrateSoundEvents "MigrateSoundEvents"
+	#func global NotifyCallbackData "NotifyCallbackData" sptr,sptr,sptr,sptr,sptr
+	#func global OpenDriver "OpenDriver" sptr,sptr,sptr
+	#func global PlaySound "PlaySound" sptr,sptr,sptr
+	#func global PlaySoundA "PlaySoundA" sptr,sptr,sptr
+	#func global PlaySoundW "PlaySoundW" wptr,wptr,wptr
+	#func global SendDriverMessage "SendDriverMessage" sptr,sptr,sptr,sptr
+	#func global WOW32DriverCallback "WOW32DriverCallback" sptr,sptr,sptr,sptr,sptr,sptr,sptr
+	#func global WOW32ResolveMultiMediaHandle "WOW32ResolveMultiMediaHandle" sptr,sptr,sptr,sptr,sptr,sptr
+	#func global WOWAppExit "WOWAppExit" sptr
+	#func global aux32Message "aux32Message" sptr,sptr,sptr,sptr,sptr
+	#define global auxGetDevCaps auxGetDevCapsA
+	#func global auxGetDevCapsA "auxGetDevCapsA" sptr,sptr,sptr
+	#func global auxGetDevCapsW "auxGetDevCapsW" wptr,wptr,wptr
+	#func global auxGetNumDevs "auxGetNumDevs"
+	#func global auxGetVolume "auxGetVolume" sptr,sptr
+	#func global auxOutMessage "auxOutMessage" sptr,sptr,sptr,sptr
+	#func global auxSetVolume "auxSetVolume" sptr,sptr
+	#func global joy32Message "joy32Message" sptr,sptr,sptr,sptr,sptr
+	#func global joyConfigChanged "joyConfigChanged" sptr
+	#define global joyGetDevCaps joyGetDevCapsA
+	#func global joyGetDevCapsA "joyGetDevCapsA" sptr,sptr,sptr
+	#func global joyGetDevCapsW "joyGetDevCapsW" wptr,wptr,wptr
+	#func global joyGetNumDevs "joyGetNumDevs"
+	#func global joyGetPos "joyGetPos" sptr,sptr
+	;#func global joyGetPosEx "joyGetPosEx" sptr,sptr
+	#func global joyGetThreshold "joyGetThreshold" sptr,sptr
+	#func global joyReleaseCapture "joyReleaseCapture" sptr
+	#func global joySetCapture "joySetCapture" sptr,sptr,sptr,sptr
+	#func global joySetThreshold "joySetThreshold" sptr,sptr
+	#func global mci32Message "mci32Message" sptr,sptr,sptr,sptr,sptr
+	#func global mciDriverNotify "mciDriverNotify" sptr,sptr,sptr
+	#func global mciDriverYield "mciDriverYield" sptr
+	#func global mciExecute "mciExecute" sptr
+	#func global mciFreeCommandResource "mciFreeCommandResource" sptr
+	#func global mciGetCreatorTask "mciGetCreatorTask" sptr
+	#define global mciGetDeviceID mciGetDeviceIDA
+	#func global mciGetDeviceIDA "mciGetDeviceIDA" sptr
+	#define global mciGetDeviceIDFromElementID mciGetDeviceIDFromElementIDA
+	#func global mciGetDeviceIDFromElementIDA "mciGetDeviceIDFromElementIDA" sptr,sptr
+	#func global mciGetDeviceIDFromElementIDW "mciGetDeviceIDFromElementIDW" wptr,wptr
+	#func global mciGetDeviceIDW "mciGetDeviceIDW" wptr
+	#func global mciGetDriverData "mciGetDriverData" sptr
+	#define global mciGetErrorString mciGetErrorStringA
+	#func global mciGetErrorStringA "mciGetErrorStringA" sptr,sptr,sptr
+	#func global mciGetErrorStringW "mciGetErrorStringW" wptr,wptr,wptr
+	#func global mciGetYieldProc "mciGetYieldProc" sptr,sptr
+	#func global mciLoadCommandResource "mciLoadCommandResource" sptr,sptr,sptr
+	#define global mciSendCommand mciSendCommandA
+	#func global mciSendCommandA "mciSendCommandA" sptr,sptr,sptr,sptr
+	#func global mciSendCommandW "mciSendCommandW" wptr,wptr,wptr,wptr
+	#define global mciSendString mciSendStringA
+	#func global mciSendStringA "mciSendStringA" sptr,sptr,sptr,sptr
+	#func global mciSendStringW "mciSendStringW" wptr,wptr,wptr,wptr
+	#func global mciSetDriverData "mciSetDriverData" sptr,sptr
+	#func global mciSetYieldProc "mciSetYieldProc" sptr,sptr,sptr
+	#func global mid32Message "mid32Message" sptr,sptr,sptr,sptr,sptr
+	#func global midiConnect "midiConnect" sptr,sptr,sptr
+	#func global midiDisconnect "midiDisconnect" sptr,sptr,sptr
+	#func global midiInAddBuffer "midiInAddBuffer" sptr,sptr,sptr
+	#func global midiInClose "midiInClose" sptr
+	#define global midiInGetDevCaps midiInGetDevCapsA
+	#func global midiInGetDevCapsA "midiInGetDevCapsA" sptr,sptr,sptr
+	#func global midiInGetDevCapsW "midiInGetDevCapsW" wptr,wptr,wptr
+	#define global midiInGetErrorText midiInGetErrorTextA
+	#func global midiInGetErrorTextA "midiInGetErrorTextA" sptr,sptr,sptr
+	#func global midiInGetErrorTextW "midiInGetErrorTextW" wptr,wptr,wptr
+	#func global midiInGetID "midiInGetID" sptr,sptr
+	#func global midiInGetNumDevs "midiInGetNumDevs"
+	#func global midiInMessage "midiInMessage" sptr,sptr,sptr,sptr
+	#func global midiInOpen "midiInOpen" sptr,sptr,sptr,sptr,sptr
+	#func global midiInPrepareHeader "midiInPrepareHeader" sptr,sptr,sptr
+	#func global midiInReset "midiInReset" sptr
+	#func global midiInStart "midiInStart" sptr
+	#func global midiInStop "midiInStop" sptr
+	#func global midiInUnprepareHeader "midiInUnprepareHeader" sptr,sptr,sptr
+	#func global midiOutCacheDrumPatches "midiOutCacheDrumPatches" sptr,sptr,sptr,sptr
+	#func global midiOutCachePatches "midiOutCachePatches" sptr,sptr,sptr,sptr
+	#func global midiOutClose "midiOutClose" sptr
+	#define global midiOutGetDevCaps midiOutGetDevCapsA
+	#func global midiOutGetDevCapsA "midiOutGetDevCapsA" sptr,sptr,sptr
+	#func global midiOutGetDevCapsW "midiOutGetDevCapsW" wptr,wptr,wptr
+	#define global midiOutGetErrorText midiOutGetErrorTextA
+	#func global midiOutGetErrorTextA "midiOutGetErrorTextA" sptr,sptr,sptr
+	#func global midiOutGetErrorTextW "midiOutGetErrorTextW" wptr,wptr,wptr
+	#func global midiOutGetID "midiOutGetID" sptr,sptr
+	#func global midiOutGetNumDevs "midiOutGetNumDevs"
+	#func global midiOutGetVolume "midiOutGetVolume" sptr,sptr
+	#func global midiOutLongMsg "midiOutLongMsg" sptr,sptr,sptr
+	#func global midiOutMessage "midiOutMessage" sptr,sptr,sptr,sptr
+	#func global midiOutOpen "midiOutOpen" sptr,sptr,sptr,sptr,sptr
+	#func global midiOutPrepareHeader "midiOutPrepareHeader" sptr,sptr,sptr
+	#func global midiOutReset "midiOutReset" sptr
+	#func global midiOutSetVolume "midiOutSetVolume" sptr,sptr
+	#func global midiOutShortMsg "midiOutShortMsg" sptr,sptr
+	#func global midiOutUnprepareHeader "midiOutUnprepareHeader" sptr,sptr,sptr
+	#func global midiStreamClose "midiStreamClose" sptr
+	#func global midiStreamOpen "midiStreamOpen" sptr,sptr,sptr,sptr,sptr,sptr
+	#func global midiStreamOut "midiStreamOut" sptr,sptr,sptr
+	#func global midiStreamPause "midiStreamPause" sptr
+	#func global midiStreamPosition "midiStreamPosition" sptr,sptr,sptr
+	#func global midiStreamProperty "midiStreamProperty" sptr,sptr,sptr
+	#func global midiStreamRestart "midiStreamRestart" sptr
+	#func global midiStreamStop "midiStreamStop" sptr
+	#func global mixerClose "mixerClose" sptr
+	#define global mixerGetControlDetails mixerGetControlDetailsA
+	#func global mixerGetControlDetailsA "mixerGetControlDetailsA" sptr,sptr,sptr
+	#func global mixerGetControlDetailsW "mixerGetControlDetailsW" wptr,wptr,wptr
+	#define global mixerGetDevCaps mixerGetDevCapsA
+	#func global mixerGetDevCapsA "mixerGetDevCapsA" sptr,sptr,sptr
+	#func global mixerGetDevCapsW "mixerGetDevCapsW" wptr,wptr,wptr
+	#func global mixerGetID "mixerGetID" sptr,sptr,sptr
+	#define global mixerGetLineControls mixerGetLineControlsA
+	#func global mixerGetLineControlsA "mixerGetLineControlsA" sptr,sptr,sptr
+	#func global mixerGetLineControlsW "mixerGetLineControlsW" wptr,wptr,wptr
+	#define global mixerGetLineInfo mixerGetLineInfoA
+	#func global mixerGetLineInfoA "mixerGetLineInfoA" sptr,sptr,sptr
+	#func global mixerGetLineInfoW "mixerGetLineInfoW" wptr,wptr,wptr
+	#func global mixerGetNumDevs "mixerGetNumDevs"
+	#func global mixerMessage "mixerMessage" sptr,sptr,sptr,sptr
+	#func global mixerOpen "mixerOpen" sptr,sptr,sptr,sptr,sptr
+	#func global mixerSetControlDetails "mixerSetControlDetails" sptr,sptr,sptr
+	#func global mmDrvInstall "mmDrvInstall" sptr,sptr,sptr,sptr
+	#func global mmGetCurrentTask "mmGetCurrentTask"
+	#func global mmTaskBlock "mmTaskBlock" sptr
+	#func global mmTaskCreate "mmTaskCreate" sptr,sptr,sptr
+	#func global mmTaskSignal "mmTaskSignal" sptr
+	#func global mmTaskYield "mmTaskYield"
+	#func global mmioAdvance "mmioAdvance" sptr,sptr,sptr
+	#func global mmioAscend "mmioAscend" sptr,sptr,sptr
+	#func global mmioClose "mmioClose" sptr,sptr
+	#func global mmioCreateChunk "mmioCreateChunk" sptr,sptr,sptr
+	#func global mmioDescend "mmioDescend" sptr,sptr,sptr,sptr
+	#func global mmioFlush "mmioFlush" sptr,sptr
+	#func global mmioGetInfo "mmioGetInfo" sptr,sptr,sptr
+	#define global mmioInstallIOProc mmioInstallIOProcA
+	#func global mmioInstallIOProcA "mmioInstallIOProcA" sptr,sptr,sptr
+	#func global mmioInstallIOProcW "mmioInstallIOProcW" wptr,wptr,wptr
+	#define global mmioOpen mmioOpenA
+	#func global mmioOpenA "mmioOpenA" sptr,sptr,sptr
+	#func global mmioOpenW "mmioOpenW" wptr,wptr,wptr
+	#func global mmioRead "mmioRead" sptr,sptr,sptr
+	#define global mmioRename mmioRenameA
+	#func global mmioRenameA "mmioRenameA" sptr,sptr,sptr,sptr
+	#func global mmioRenameW "mmioRenameW" wptr,wptr,wptr,wptr
+	#func global mmioSeek "mmioSeek" sptr,sptr,sptr
+	#func global mmioSendMessage "mmioSendMessage" sptr,sptr,sptr,sptr
+	#func global mmioSetBuffer "mmioSetBuffer" sptr,sptr,sptr,sptr
+	#func global mmioSetInfo "mmioSetInfo" sptr,sptr,sptr
+	#define global mmioStringToFOURCC mmioStringToFOURCCA
+	#func global mmioStringToFOURCCA "mmioStringToFOURCCA" sptr,sptr
+	#func global mmioStringToFOURCCW "mmioStringToFOURCCW" wptr,wptr
+	#func global mmioWrite "mmioWrite" sptr,sptr,sptr
+	#func global mmsystemGetVersion "mmsystemGetVersion"
+	#func global mod32Message "mod32Message" sptr,sptr,sptr,sptr,sptr
+	#func global mxd32Message "mxd32Message" sptr,sptr,sptr,sptr,sptr
+	#define global sndPlaySound sndPlaySoundA
+	#func global sndPlaySoundA "sndPlaySoundA" sptr,sptr
+	#func global sndPlaySoundW "sndPlaySoundW" wptr,wptr
+	#func global tid32Message "tid32Message" sptr,sptr,sptr,sptr,sptr
+	#func global timeBeginPeriod "timeBeginPeriod" sptr
+	#func global timeEndPeriod "timeEndPeriod" sptr
+	#func global timeGetDevCaps "timeGetDevCaps" sptr,sptr
+	#func global timeGetSystemTime "timeGetSystemTime" sptr,sptr
+	#func global timeGetTime "timeGetTime"
+	#func global timeKillEvent "timeKillEvent" sptr
+	#func global timeSetEvent "timeSetEvent" sptr,sptr,sptr,sptr,sptr
+	#func global waveInAddBuffer "waveInAddBuffer" sptr,sptr,sptr
+	#func global waveInClose "waveInClose" sptr
+	#define global waveInGetDevCaps waveInGetDevCapsA
+	#func global waveInGetDevCapsA "waveInGetDevCapsA" sptr,sptr,sptr
+	#func global waveInGetDevCapsW "waveInGetDevCapsW" wptr,wptr,wptr
+	#define global waveInGetErrorText waveInGetErrorTextA
+	#func global waveInGetErrorTextA "waveInGetErrorTextA" sptr,sptr,sptr
+	#func global waveInGetErrorTextW "waveInGetErrorTextW" wptr,wptr,wptr
+	#func global waveInGetID "waveInGetID" sptr,sptr
+	#func global waveInGetNumDevs "waveInGetNumDevs"
+	#func global waveInGetPosition "waveInGetPosition" sptr,sptr,sptr
+	#func global waveInMessage "waveInMessage" sptr,sptr,sptr,sptr
+	#func global waveInOpen "waveInOpen" sptr,sptr,sptr,sptr,sptr,sptr
+	#func global waveInPrepareHeader "waveInPrepareHeader" sptr,sptr,sptr
+	#func global waveInReset "waveInReset" sptr
+	#func global waveInStart "waveInStart" sptr
+	#func global waveInStop "waveInStop" sptr
+	#func global waveInUnprepareHeader "waveInUnprepareHeader" sptr,sptr,sptr
+	#func global waveOutBreakLoop "waveOutBreakLoop" sptr
+	#func global waveOutClose "waveOutClose" sptr
+	#define global waveOutGetDevCaps waveOutGetDevCapsA
+	#func global waveOutGetDevCapsA "waveOutGetDevCapsA" sptr,sptr,sptr
+	#func global waveOutGetDevCapsW "waveOutGetDevCapsW" wptr,wptr,wptr
+	#define global waveOutGetErrorText waveOutGetErrorTextA
+	#func global waveOutGetErrorTextA "waveOutGetErrorTextA" sptr,sptr,sptr
+	#func global waveOutGetErrorTextW "waveOutGetErrorTextW" wptr,wptr,wptr
+	#func global waveOutGetID "waveOutGetID" sptr,sptr
+	#func global waveOutGetNumDevs "waveOutGetNumDevs"
+	#func global waveOutGetPitch "waveOutGetPitch" sptr,sptr
+	#func global waveOutGetPlaybackRate "waveOutGetPlaybackRate" sptr,sptr
+	#func global waveOutGetPosition "waveOutGetPosition" sptr,sptr,sptr
+	#func global waveOutGetVolume "waveOutGetVolume" sptr,sptr
+	#func global waveOutMessage "waveOutMessage" sptr,sptr,sptr,sptr
+	#func global waveOutOpen "waveOutOpen" sptr,sptr,sptr,sptr,sptr,sptr
+	#func global waveOutPause "waveOutPause" sptr
+	#func global waveOutPrepareHeader "waveOutPrepareHeader" sptr,sptr,sptr
+	#func global waveOutReset "waveOutReset" sptr
+	#func global waveOutRestart "waveOutRestart" sptr
+	#func global waveOutSetPitch "waveOutSetPitch" sptr,sptr
+	#func global waveOutSetPlaybackRate "waveOutSetPlaybackRate" sptr,sptr
+	#func global waveOutSetVolume "waveOutSetVolume" sptr,sptr
+	#func global waveOutUnprepareHeader "waveOutUnprepareHeader" sptr,sptr,sptr
+	#func global waveOutWrite "waveOutWrite" sptr,sptr,sptr
+	#func global wid32Message "wid32Message" sptr,sptr,sptr,sptr,sptr
+	#func global winmmDbgOut "winmmDbgOut" sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr,sptr
+	#func global winmmSetDebugLevel "winmmSetDebugLevel" sptr
+	#func global wod32Message "wod32Message" sptr,sptr,sptr,sptr,sptr
+#endif
+#endif
+
+#module _WAVEOUT_M_
+
+// 
+// モジュール初期化
+// 
+#deffunc local init
+
+// WAVEFORMATEX 構造体
+wBytesPerSample = 2      // 量子化バイト数
+
+wFormatTag      = 0x0001 // WAVE_FORMAT_PCM
+nChannels       = 2      // ステレオ
+nSamplesPerSec  = 44100  // サンプルレート
+wBitsPerSample  = wBytesPerSample * 8
+nBlockAlign     = nChannels * wBytesPerSample
+nAvgBytesPerSec = nSamplesPerSec * nBlockAlign
+cbSize          = 0
+
+wfex = wFormatTag | (nChannels << 16), nSamplesPerSec, nAvgBytesPerSec, nBlockAlign | (wBitsPerSample << 16), cbSize
+
+// オープン
+hWaveOut = 0
+waveOutOpen varptr(hWaveOut), -1, varptr(wfex), 0, 0, 0 // WAVE_MAPPER, CALLBACK_NULL
+
+return
+
+// 
+// モジュール終了処理
+// 
+#deffunc exit onexit
+
+// クローズ
+waveOutReset hWaveOut
+waveOutUnprepareHeader hWaveOut, varptr(whdr), 32 // sizeof(WAVEHDR)
+waveOutClose hWaveOut
+
+return
+
+// 
+// wave 出力
+// 
+// _wave      : 波形データの入った変数
+// _nAvgBytes : 波形データのバイト数
+// 
+#deffunc waveOut var _wave, int _nAvgBytes
+
+// WAVEHDR 構造体
+lpData          = varptr(_wave)
+dwBufferLength  = _nAvgBytes
+dwBytesRecorded = 0
+dwUser          = 0
+dwFlags         = 12 // WHDR_BEGINLOOP | WHDR_ENDLOOP
+//dwLoops         = 1  // ループ回数
+dwLoops         = -1  // ループ回数
+lpNext          = 0
+reserved        = 0
+
+whdr = lpData, dwBufferLength, dwBytesRecorded, dwUser, dwFlags, dwLoops, lpNext, reserved
+
+// 再生
+
+waveOutReset hWaveOut
+waveOutPrepareHeader hWaveOut, varptr(whdr), 32 // sizeof(WAVEHDR)
+waveOutWrite hWaveOut, varptr(whdr), 32 // sizeof(WAVEHDR)
+return
+
+// 
+// サイン波出力
+// 
+// f : 周波数 (ヘルツ単位)
+// a : 振幅   (0.0 ～ 1.0)
+// t : 時間   (秒単位)
+// 
+#deffunc waveOutSine double f, double a, double t
+
+// 波形データ
+nSamples = int(t * nSamplesPerSec) // 全体のサンプル数
+nAvgBytes = nSamples * nBlockAlign // 全体のバイト数
+
+dim wave, (nAvgBytes + 3) / 4
+repeat nSamples
+// この部分は nChannels や wBytesPerSample によって書き換えが必要
+wpoke wave, cnt * 4    , int(sin(2.0 * M_PI * f * cnt / nSamplesPerSec) * 0x7FFF * a) & 0xFFFF
+wpoke wave, cnt * 4 + 2, int(sin(2.0 * M_PI * f * cnt / nSamplesPerSec) * 0x7FFF * a) & 0xFFFF
+loop
+
+// 再生
+waveOut wave, nAvgBytes
+
+return
+
+#global
+
+init@_WAVEOUT_M_
+
+#endif
 bgscr 0,ginfo(20),ginfo(21),0,0,0
 //hgini
 title "Gocaine N80"
@@ -256,6 +583,7 @@ fc_bsrmode=0
 fc_i8255view=0
 i8255md1sigbufa=0
 i8255md1sigbufb=0
+beepenabletimex=1000
 sdim memory,65536
 sdim fontrom,0x800
 sdim rom,65536,16
@@ -566,6 +894,8 @@ dim bank,bankmax
 graphicdraw=1
 cursx=-1
 cursy=-1
+ldim bpsoundctrlptr,2
+bpsoundctrlptr(0)=*bpsoundctlr_b,*bpsoundctlr_a
 ldim memoryioportlbl,2,50
 ldim memoryioportlblbase,5
 memoryioportlblbase(0)=*memacc_memwr,*memacc_memrd,*memacc_iowr,*memacc_iord,*memacc_none
@@ -599,7 +929,7 @@ oncmd gosub *keydown,$100
 oncmd gosub *keyup,$101
 gsel 0,0
 //oncmd gosub *interruptlbl,$113
-settimer hwnd,1,333,0
+;settimer hwnd,1,333,0
 //settimer hwnd,2,13,0
 //settimer hwnd,3,10,0
 //settimer hwnd,4,16,0
@@ -621,23 +951,27 @@ repeat//cnt*((((blinktimest(blinkingtime)/3)*3)-1)+16)*/:cntmaincs=0
 cntmain=0
 oprestruct=0
 //repeat 1000*1000*4:cntmain++//=cnt
-repeat 60
+//abtime=gettime(6)
+beepenabletimex=gettime(7)
+repeat
+if clocka>=4000000{break}
 //if (cnt\2)=0{vbi=1}else{vbi=0}
 //gettme=gettime(7)-gettmex:gettme+=(1000*(gettme<0))//if gettme<0{gettme+=1000}
 interruptformt=1
 vbismacs=1
 emulatorexeci=0
 vbi=1
-repeat 65536*4:cntmain++//=cnt
+//abtime=gettime(7)
+cnta=cnt
+repeat 66666*5:cntmain++//=cnt
 //gosub *bpsoundctlr
-if (cntmain\2)=0{
-vbi=1
-}else{
-vbi=0
-}
+vbi=((cntmain\2)=0)
+clockaold=clocka:clocka+=z80run_c(address,0):clocktmp=clocka-clockaold
 //if (cntmain\32768)=0 and cntmain!0{gosub *bpsoundctlr}
-continue cnt+z80run_c(address,0)//+1
+continue cnt+clocktmp//+1
 loop
+//dialog gettime(7)-abtime
+//stop
 vbi=0
 //repeat 8192:cntmain++//=cnt
 //cntmaincs=cnt\((blinktimest(blinkingtime)))
@@ -700,6 +1034,7 @@ interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plagi
 //if vbirde=1{
 if vbi=0{
 gosub *drawbackground
+clocka+=22666*20
 gosub *drawforeground
 vbis=0//:gosub *bpsoundctlr
 interruptformt=1:functyper=2|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
@@ -707,7 +1042,7 @@ vbirde=0
 }//else{await}
 /*gosub *drawbackground
 gosub *drawforeground*/
-gosub *bpsoundctlr
+//gosub *bpsoundctlr
 await
 //interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
 //await
@@ -716,11 +1051,17 @@ vbis=0
 //}//else{if (gettme\16)<4{vbi=0}}
 interruptformt=1:functyper=0|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
 //if (cnt\3)=2 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){if usejit=0{z80interrupt address,0,2*3}else{z80jitinterrupt address,2*3,0}}else{if (cnt\5)=4 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){if usejit=0{z80interrupt address,0,2*5}else{z80jitinterrupt address,2*5,0}}}
+vbi=0
 repeat 8192:cntmain++//=cnt
-continue cnt+z80run_c(address,0)//+1
+clockaold=clocka:clocka+=z80run_c(address,0):clocktmp=clocka-clockaold
+continue cnt+clocktmp//+1
 loop
-gosub *bpsoundctlr
+;gosub *bpsoundctlr
 loop
+clockab=clocka:beepenabletime=int(0.0006*clocka):clocka=0
+;dialog clockab
+//abtime=gettime(6)-abtime:if abtime<0{abtime+=60}
+//dialog str(abtime)
 if (interruptphb&1)!0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}
 await
 interruptformt=0
@@ -785,6 +1126,7 @@ poke bnkmemory(bankid-1),_z80_addr,_z80_data
 return
 //}
 *memory_wr_ram
+clocka+=1
 poke memory,_z80_addr,_z80_data
 return
 /*swbreak
@@ -818,6 +1160,7 @@ return peek(bnkmemory(bankid-1),_z80_addr)
 }
 //}
 *memory_rd_ram
+clocka+=1
 return peek(memory,_z80_addr)
 /*swbreak
 case 2*/
@@ -937,7 +1280,7 @@ case 2*/
 		rtcstbenable=(_z80_data>>1)&0x01
 		if rtcstbenable=1{gosub *rtcstrobe}else{if rtcclkenable=1{gosub *rtcshift}}
 		prtenable=(_z80_data>>0)&0x01:gosub *prtstrobe
-		;gosub *bpsoundctlr
+		gosub *bpsoundctlr
 	swbreak
 	case 0x50
 	case 0x52
@@ -2182,11 +2525,23 @@ emulatorexeci=1
 return
 
 *bpsoundctlr
+goto bpsoundctrlptr(playingbeep=0)
 if playingbeep=0{
 if beepenable=1{
 playingbeep=1
-mmplay 0
-}else{mmstop 0}}else{if beepenable=0{mmstop 0:playingbeep=0}}
+waveOutSine 2400,0.1,0.01
+//mmplay 0
+}else{waveOutPause hWaveOut@_WAVEOUT_M_}}else{if beepenable=0{waveOutPause hWaveOut@_WAVEOUT_M_:playingbeep=0}}
+return
+*bpsoundctlr_a
+if beepenable=1{
+playingbeep=1
+waveOutSine 2400,0.1,0.01
+//mmplay 0
+}else{waveOutPause hWaveOut@_WAVEOUT_M_}
+return
+*bpsoundctlr_b
+if beepenable=0{waveOutPause hWaveOut@_WAVEOUT_M_:playingbeep=0}
 return
 
 *clkdownmvup
