@@ -424,6 +424,728 @@ return
 init@_WAVEOUT_M_
 
 #endif
+
+;============================================================
+; ドキュメンテーションコメントつきヘッダファイル
+;============================================================
+/* ～ モジュール情報 (hs デフォルトレコード)
+%dll
+mod_beep
+
+%ver
+1.00
+
+%date
+2016/07/17
+
+%author
+GENKI
+
+%note
+mod_beep.hsp をインクルードする。
+
+%type
+ユーザー拡張命令
+
+%*/ ; <--- これ以降は hs ファイルとしてはコメントになる
+;------------------------------------------------------------
+
+;
+;
+;[ Update history ]
+;yyyy/mm/dd : ver  : comment
+;2016/07/17 : 1.00 : 完成
+;
+;
+;
+#ifndef __BEEP_MOD__
+#define global __BEEP_MOD__
+
+;#include "winmm.as"
+
+#module _MOD_BEEP_
+;---------------------------------------------------------------------------------------------------
+
+;///////////////////////////////////////////////////////////////////////////////////////////////////
+;
+;	定数の定義
+;
+;#const global 
+;#enum global 
+#define WAVE_MAPPER     0xFFFFFFFF	// 特にデバイスの区別を意識しないでオープンしたい場合
+#define CALLBACK_NULL   0x00000000	// コールバック機構はありません。
+#define CALLBACK_WINDOW 0x00010000	// dwCallback パラメータは、ウィンドウハンドルです。
+
+;WAVEHDR 構造体 dwFlags
+#define WHDR_DONE       0x00000001  // このフラグはデバイスドライバが設定する。ドライバがバッファの使用を終了したことを表す
+#define WHDR_PREPARED   0x00000002  // このフラグは Windows が設定する。バッファが準備されたことを表す
+#define WHDR_BEGINLOOP  0x00000004  // このバッファはループ内の先頭バッファである
+#define WHDR_ENDLOOP    0x00000008  // このバッファはループ内の最後のバッファである
+#define WHDR_INQUEUE    0x00000010  // このフラグは Windows が設定する。バッファが再生キューに入ることを表す
+
+;===========================================================
+;
+;	init@_MOD_BEEP_
+;
+;モジュール初期化
+;
+;===========================================================
+/*
+BeepInit@_WAVEOUT_M_
+モジュール初期化
+
+この命令はモジュール読み込み時に自動的に実行されるため、
+ユーザーが実行する必要はありません。
+
+%*/
+;------------------------------------------------------------
+;
+
+#deffunc local BeepInit
+	;-----------------------------------
+	;	WAVEFORMATEX 構造体
+	;-----------------------------------
+	wBytesPerSample = 2      // 量子化バイト数
+
+	wFormatTag      = 0x0001 // WAVE_FORMAT_PCM
+	nChannels       = 2      // チャンネル数 [ch]
+	nSamplesPerSec  = 44100  // サンプルレート [Hz]
+	wBitsPerSample  = wBytesPerSample * 8			// 1 サンプルあたりの量子化ビット数 [byte]
+	nBlockAlign     = nChannels * wBytesPerSample	// 1データ分のブロックサイズ [byte]
+	nAvgBytesPerSec = nSamplesPerSec * nBlockAlign	// 平均データレート [byte/sec]
+	cbSize          = 0
+
+	dim wfex, 5
+	wfex(0) = wFormatTag | (nChannels << 16)
+	wfex(1) = nSamplesPerSec
+	wfex(2) = nAvgBytesPerSec
+	wfex(3) = nBlockAlign | (wBitsPerSample << 16)
+	wfex(4) = cbSize
+
+	;-----------------------------------
+	;	デバイスオープン
+	;-----------------------------------
+	hWaveOut = 0
+	waveOutOpen varptr(hWaveOut), -1, varptr(wfex), 0, 0, 0 // WAVE_MAPPER, CALLBACK_NULL
+	
+	;-----------------------------------
+	;	メモリ確保
+	;-----------------------------------
+	nAvgBytes = nAvgBytesPerSec		; 1秒分のバッファ
+	dim wave_s,  (nAvgBytes + 3) / 4	; 1秒分のバイト数を確保
+	dim wave_ms, (nAvgBytes + 3) / 4	; 1ミリ秒分のバイト数を確保
+		;nAvgBytesバイト確保。dimは1のとき4byte確保するので1/4倍を指定している。
+	dim wave2_s,  (nAvgBytes + 3) / 4	; 1秒分のバイト数を確保
+	dim wave2_ms, (nAvgBytes + 3) / 4	; 1ミリ秒分のバイト数を確保
+
+	;-----------------------------------
+	;	WAVEHDR 構造体
+	;-----------------------------------
+	dim whdr_s, 8
+	dim whdr_ms, 8
+	dim whdr2_s, 8
+	dim whdr2_ms, 8
+
+	;	振幅
+	ampBeep = 0.4
+	return
+
+
+
+;===========================================================
+/*
+%index
+BeepExit
+Beepモジュール終了処理
+
+%inst
+Beepモジュールの終了処理を行います。
+終了時に自動実行されるためユーザーが直接実行する必要はありません。
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepExit onexit
+
+	// クローズ
+	waveOutReset hWaveOut
+	;	WAVEHDR 構造体を使用中の場合、一旦開放。
+	if whdr_s(4) & WHDR_PREPARED {
+		waveOutUnprepareHeader hWaveOut, varptr(whdr_s), 32 // sizeof(WAVEHDR)
+	}
+	if whdr_ms(4) & WHDR_PREPARED {
+		waveOutUnprepareHeader hWaveOut, varptr(whdr_ms), 32 // sizeof(WAVEHDR)
+	}
+	if whdr2_s(4) & WHDR_PREPARED {
+		waveOutUnprepareHeader hWaveOut, varptr(whdr2_s), 32 // sizeof(WAVEHDR)
+	}
+	if whdr2_ms(4) & WHDR_PREPARED {
+		waveOutUnprepareHeader hWaveOut, varptr(whdr2_ms), 32 // sizeof(WAVEHDR)
+	}
+	waveOutClose hWaveOut
+
+	return
+
+
+
+;===========================================================
+/*
+	BeepSetWavehdr@_MOD_BEEP_
+	WAVEHDR 構造体を作成
+array _whdr     : WAVEHDR 構造体
+var   _wave     : 波形バッファ
+int   _nAvgBytes: 波形データのバイト数
+int   p_loop    : ループ回数
+
+WAVEHDR 構造体を作成します。
+p_loopに0以下の値を指定するとループしません。
+モジュール内で使用するための関数なので、ユーザーは使用する必要はありません。
+*/
+;------------------------------------------------------------
+;
+#deffunc local BeepSetWavehdr array _whdr, var _wave, int _nAvgBytes, int p_loop
+	;-----------------------------------
+	;	引数チェック
+	;-----------------------------------
+	loops = p_loop
+	if p_loop < 0 : loops = 0
+	;if length(_whdr)<8 : dim _whdr, 8
+	
+	;-----------------------------------
+	;	WAVEHDR 構造体
+	;-----------------------------------
+	lpData          = varptr(_wave)	// 波形バッファへのポインタ。
+	dwBufferLength  = _nAvgBytes	// 波形データのバイト数
+	dwBytesRecorded = 0				// バッファ内にあるデータの量
+	dwUser          = 0				// ユーザーデータ
+	dwFlags         = 12 * (loops>0)	// WHDR_BEGINLOOP | WHDR_ENDLOOP
+	dwLoops         = loops			// ループ回数
+	lpNext          = 0		// 予約
+	reserved        = 0		// 予約
+
+	// dwFlags
+	// #define WHDR_DONE       0x00000001  // このフラグはデバイスドライバが設定する。ドライバがバッファの使用を終了したことを表す
+	// #define WHDR_PREPARED   0x00000002  // このフラグは Windows が設定する。バッファが準備されたことを表す
+	// #define WHDR_BEGINLOOP  0x00000004  // このバッファはループ内の先頭バッファである
+	// #define WHDR_ENDLOOP    0x00000008  // このバッファはループ内の最後のバッファである
+	// #define WHDR_INQUEUE    0x00000010  // このフラグは Windows が設定する。バッファが再生キューに入ることを表す
+
+	_whdr(0) = lpData
+	_whdr(1) = dwBufferLength
+	_whdr(2) = dwBytesRecorded
+	_whdr(3) = dwUser
+	_whdr(4) = dwFlags
+	_whdr(5) = dwLoops
+	_whdr(6) = lpNext
+	_whdr(7) = reserved
+	return
+
+
+
+;===========================================================
+/*
+%index
+BeepSetAmp
+Beep音の音量を設定
+
+%prm
+amp
+double amp =0.0～1.0(0.4) : 音の大きさ、振幅値
+
+%inst
+Beep音の音量（波形の振幅値）を設定します。
+0.0～1.0の値が指定できます。
+初期値および省略時は、0.4に設定されます。
+
+%href
+BeepPlay
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepSetAmp_ double p_amp
+	ampBeep = p_amp
+	if p_amp < 0.0 : ampBeep = 0.0
+	if p_amp > 1.0 : ampBeep = 1.0
+	return
+
+#define global BeepSetAmp(%1=0.4)	BeepSetAmp_ %1
+
+
+	
+;===========================================================
+/*
+%index
+BeepPlay
+スピーカから単純な音を鳴らします。
+
+%prm
+freq, duration
+int freq     =0～ (441): 周波数 [Hz]
+int duration =0～(1000): 時間   [sec]
+int standby         (1): 再生終了を確認する間隔 [msec]
+
+%inst
+スピーカから単純な音（矩形波）を鳴らします。
+昔のPCのビープ音のような音が聞こえます。左右両方のスピーカーから同じ音が出ます。
+BeepPlayとBeepPlayの間に無音時間を作りたい場合は、waitやawaitではなく、BeepPlay 0 を
+使用してください。
+
+freq
+音の周波数をヘルツ単位で指定します。
+整数値が指定できます。
+0を指定すると無音になります。
+
+duration
+音の継続時間をミリ秒（ms）単位で指定します。
+
+standby
+0以上の値を指定すると、音声の再生が終了するまで待機します。次の行の命令を実行しません。
+再生終了を確認する時間間隔をミリ秒単位で指定します。通常は1以上の値を指定します。
+マイナス値(-1など)を指定すると、待機せずに次の行の命令を実行します。
+省略すると1が指定されます。
+
+音声の再生を中断して待機を解除したい場合は、BeepStop命令を使用してください。
+
+%sample
+; サンプルスクリプト を記入
+
+%href
+BeepStop
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepPlay_ int p_freq, int p_duration, int p_standby
+	
+	;-----------------------------------
+	;	引数チェック
+	;-----------------------------------
+	freqSin  = p_freq
+	if freqSin<=0 : freqSin = abs(freqSin)
+	ampSin   = ampBeep	;振幅
+	if freqSin = 0 : ampSin = 0.0
+	duration = p_duration
+	if duration<=0 : duration = abs(duration)
+	;	1秒単位と1000ミリ秒未満の数字に分割
+	lenghSinSec_s  = int(duration/1000)			; sec
+	lenghSinSec_ms = duration - lenghSinSec_s*1000		; m sec
+
+
+	;-----------------------------------
+	;	WAVEHDR 構造体を使用中の場合、再生を止めて一旦開放。
+	;-----------------------------------
+	;再生終了を待たない場合
+	if (p_standby < 0) {
+		waveOutPause hWaveOut
+		waveOutReset hWaveOut
+		if whdr_s(4) & WHDR_PREPARED {
+			waveOutUnprepareHeader hWaveOut, varptr(whdr_s), 32 // sizeof(WAVEHDR)
+		}
+		if whdr_ms(4) & WHDR_PREPARED {
+			waveOutUnprepareHeader hWaveOut, varptr(whdr_ms), 32 // sizeof(WAVEHDR)
+		}
+		if whdr2_s(4) & WHDR_PREPARED {
+			waveOutUnprepareHeader hWaveOut, varptr(whdr2_s), 32 // sizeof(WAVEHDR)
+		}
+		if whdr2_ms(4) & WHDR_PREPARED {
+			waveOutUnprepareHeader hWaveOut, varptr(whdr2_ms), 32 // sizeof(WAVEHDR)
+		}
+	}
+
+
+	;-----------------------------------
+	;	ウェーブバッファの空きを探す
+	;-----------------------------------	
+	;バッファは2個しか用意してないので、どっちかがあくまで待機する。
+	;正確にはバッファというより、キュー投入されていないバッファを探す。
+	
+	f1 = whdr_s(4) |whdr_ms(4)  & WHDR_INQUEUE
+	f2 = whdr2_s(4)|whdr2_ms(4) & WHDR_INQUEUE
+
+	;	バッファに空きがない場合は待機
+	if (p_standby >= 0) & ((f1&f2)!0) {
+		;	前の音声の再生が終了するまで待機
+		repeat
+			f1 = whdr_s(4) |whdr_ms(4)  & WHDR_INQUEUE
+			f2 = whdr2_s(4)|whdr2_ms(4) & WHDR_INQUEUE
+			if (f1 & f2)=0 : break
+			await p_standby
+		loop
+	}
+
+	;	空いている方のクローンを作成
+	;毎回ifで分けて書くのが面倒なので、クローンを使う。
+	if f1 = 0 {
+		;whdr_s, whdr_ms が空いている
+		dup whdr_s_,  whdr_s
+		dup whdr_ms_, whdr_ms
+		dup wave_s_,  wave_s
+		dup wave_ms_, wave_ms
+	} else {
+		;whdr2_s, whdr2_ms が空いている
+		dup whdr_s_,  whdr2_s
+		dup whdr_ms_, whdr2_ms
+		dup wave_s_,  wave2_s
+		dup wave_ms_, wave2_ms
+	}
+	
+
+	;-----------------------------------
+	;	波形データ
+	;-----------------------------------
+	;サンプル数
+	nSamples_s  = nSamplesPerSec * (lenghSinSec_s  > 0)
+	nSamples_ms = nSamplesPerSec *  lenghSinSec_ms / 1000
+	
+	;前の波形データを削除
+	memset wave_s_,  0, nAvgBytes
+	memset wave_ms_, 0, nAvgBytes
+
+	;波形作成
+	repeat nSamples_s
+		;正弦波
+		;y = int(sin(2.0 * M_PI * freqSin * cnt / nSamplesPerSec) * 0x7FFF * ampSin) & 0xFFFF
+		;矩形波
+		y = int(double((sin(2.0 * M_PI * freqSin * cnt / nSamplesPerSec)>0.0)*2-1) * 0x7FFF * ampSin) & 0xFFFF
+		// 1ch
+		wpoke wave_s_, cnt * 4    , y
+		// 2ch
+		wpoke wave_s_, cnt * 4+2  , y
+	loop
+	repeat nSamples_ms
+		;正弦波
+		;y = int(sin(2.0 * M_PI * freqSin * cnt / nSamplesPerSec) * 0x7FFF * ampSin) & 0xFFFF
+		;矩形波
+		y = int(double((sin(2.0 * M_PI * freqSin * cnt / nSamplesPerSec)>0.0)*2-1) * 0x7FFF * ampSin) & 0xFFFF
+		// 1ch
+		wpoke wave_ms_, cnt * 4    , y
+		// 2ch
+		wpoke wave_ms_, cnt * 4+2  , y
+	loop
+
+	;-----------------------------------
+	;	WAVEHDR 構造体を作成
+	;-----------------------------------
+	if nSamples_s > 0 {
+		BeepSetWavehdr@_MOD_BEEP_ whdr_s_,  wave_s_, nAvgBytes, lenghSinSec_s
+	}
+	if nSamples_ms > 0 {
+		BeepSetWavehdr@_MOD_BEEP_ whdr_ms_, wave_ms_, nSamples_ms * nBlockAlign, 0
+	}
+
+	;-----------------------------------
+	;	再生
+	;-----------------------------------
+	;waveOutReset hWaveOut
+	if nSamples_s > 0 {
+		waveOutPrepareHeader hWaveOut, varptr(whdr_s_), 32 // sizeof(WAVEHDR)
+		waveOutWrite         hWaveOut, varptr(whdr_s_), 32 // sizeof(WAVEHDR)
+	}
+	if nSamples_ms > 0 {
+		waveOutPrepareHeader hWaveOut, varptr(whdr_ms_), 32 // sizeof(WAVEHDR)
+		waveOutWrite         hWaveOut, varptr(whdr_ms_), 32 // sizeof(WAVEHDR)
+	}
+
+	return
+
+#define global BeepPlay(%1=441, %2=1000, %3=1)	BeepPlay_ %1, %2, %3
+
+
+;===========================================================
+/*
+%index
+BeepIsDone
+再生終了確認
+
+%inst
+BeepPlay命令で再生中の音声が再生中かどうか調べます。
+
+stat
+再生中の場合、0を返します。
+全ての音声の再生が終了すると、1を返すようになります。
+
+%sample
+BeepPlay 100, 5000, -1
+mes "再生中"
+;待機
+repeat
+	BeepIsDone
+	if stat : break
+	await 1
+loop
+mes "再生終了"
+
+%href
+BeepPlay
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepIsDone
+	;	WAVEHDR構造体のメンバーdwFlagsをチェックして再生終了を判定
+	f = 1
+	
+	;dwFlagsにWHDR_DONEフラグが立てばバッファは再生終了
+	if whdr_s(4) & WHDR_PREPARED {
+		f &= whdr_s(4) & WHDR_DONE
+	}
+	if whdr_ms(4) & WHDR_PREPARED {
+		f &= whdr_ms(4) & WHDR_DONE
+	}
+	if whdr2_s(4) & WHDR_PREPARED {
+		f &= whdr2_s(4) & WHDR_DONE
+	}
+	if whdr2_ms(4) & WHDR_PREPARED {
+		f &= whdr2_ms(4) & WHDR_DONE
+	}
+
+	return f
+
+
+;===========================================================
+/*
+%index
+BeepWaitPlayend
+再生が終了するまで待機。
+
+%prm
+standby
+int standby (1): 再生終了を確認する間隔 [msec]
+
+%inst
+BeepPlayでの音声再生が終了するまで待機します。
+standbyで指定した時間間隔おきに周期的に再生が終了したかどうかを確認します。
+マイナス値を指定すると何もせず終了します。
+
+%sample
+BeepPlay 100, 5000, -1
+mes "再生中"
+;待機
+BeepWaitPlayend 1
+mes "再生終了"
+
+%href
+BeepIsDone
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepWaitPlayend_ int p_standby
+	if p_standby<0 : return
+
+	;	再生終了まで待機
+	repeat
+		BeepIsDone
+		if stat : break
+		await p_standby
+	loop
+	return
+
+#define global BeepWaitPlayend(%1=1) BeepWaitPlayend_ %1
+
+
+
+
+;===========================================================
+/*
+%index
+BeepPause
+一時停止
+
+%inst
+再生中のBeep音を一時停止します。
+BeepRestartで再生を再開することが出来ます。
+
+%href
+BeepRestart
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepPause
+	waveOutPause hWaveOut
+	return
+
+
+;===========================================================
+/*
+%index
+BeepRestart
+再生を再開
+
+%inst
+BeepPauseで一時停止したBeep音の再生を再開します。
+
+%href
+BeepRestart
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepRestart
+	waveOutRestart hWaveOut
+	return
+
+
+;===========================================================
+/*
+%index
+BeepStop
+停止
+
+%inst
+BeepPlayで再生している音の再生を終了します。
+現在の音の再生を終了すると、直ちに次のBeepPlayの音の再生を開始します。
+
+%href
+BeepPlay
+
+%group
+マルチメディア制御命令
+
+%*/
+;------------------------------------------------------------
+;
+#deffunc BeepStop
+	waveOutPause hWaveOut
+	waveOutReset hWaveOut
+
+	;-----------------------------------
+	;	クローズ
+	;-----------------------------------
+	;	WAVEHDR 構造体を使用中の場合、一旦開放。
+	if whdr_s(4) & WHDR_PREPARED {
+		waveOutUnprepareHeader hWaveOut, varptr(whdr_s), 32 // sizeof(WAVEHDR)
+	}
+	if whdr_ms(4) & WHDR_PREPARED {
+		waveOutUnprepareHeader hWaveOut, varptr(whdr_ms), 32 // sizeof(WAVEHDR)
+	}
+	return
+
+#global	;_MOD_BEEP_
+
+BeepInit@_MOD_BEEP_
+
+#endif	;__MOD_BEEP__
+
+
+
+;-------------------------------------------------------------------------------
+;
+;	サンプルスクリプト
+;
+
+;#####################################################################
+;ここを有効にするとこのファイル単独での実行が可能になります。
+;
+;0	：リリースモード　本体側から#includeで連結して動作させる場合です。
+;1	：デバッグモード　このファイル単品で動作確認が出来ます。
+#if 0
+
+
+button goto "＞再生", *l_play
+button gosub "■停止", *l_stop
+button gosub "||一時停止", *l_pause
+button gosub "＞再開", *l_restart
+button goto "♪ド", *l_play_do
+button goto "♪レ", *l_play_re
+
+gosub *l_play
+
+stop
+
+
+;-----------------------------------
+;	再生
+;-----------------------------------
+*l_play
+	mes "再生中"
+	t = 250
+	BeepPlay 262, t	; ド
+	BeepPlay 294, t	; レ
+	BeepPlay 330, t	; ミ
+	BeepPlay 349, t	; ファ
+	BeepPlay 392, t	; ソ
+	BeepPlay 440, t	; ラ
+	BeepPlay 494, t	; シ
+	BeepPlay 523, t	; ド（高音）
+	BeepPlay 0, t	; 無音
+	BeepPlay 262, t	; ド
+	BeepPlay 294, t*2	; レー
+	BeepPlay 330, t*3	; ミーー
+	
+;	再生終了まで待機
+	repeat
+		BeepIsDone
+		if stat : break
+		await 1
+	loop
+	mes "再生終了"
+	stop
+
+
+;-----------------------------------
+;	停止
+;-----------------------------------
+*l_stop
+	BeepStop
+	return
+
+
+;-----------------------------------
+;	一時停止
+;-----------------------------------
+*l_pause
+	BeepPause
+	return
+
+
+;-----------------------------------
+;	一時停止解除
+;-----------------------------------
+*l_restart
+	BeepRestart
+	return
+
+;-----------------------------------
+;	簡易鍵盤：待たずに再生
+;-----------------------------------
+*l_play_do
+	t = 1000
+	BeepPlay 262, t, -1	; ド
+	stop
+
+*l_play_re
+	BeepPlay 294, t, -1	; レ
+	stop
+	
+#endif
+;#####################################################################
+
+
+
 bgscr 0,ginfo(20),ginfo(21),0,0,0
 //hgini
 title "Gocaine N80"
@@ -928,6 +1650,8 @@ gsel 5,0
 oncmd gosub *keydown,$100
 oncmd gosub *keyup,$101
 gsel 0,0
+		BeepIsDone:if stat=1{BeepPlay 2400, 0x7FFFFFFF}//t*l-100
+		BeepPause
 //oncmd gosub *interruptlbl,$113
 ;settimer hwnd,1,333,0
 //settimer hwnd,2,13,0
@@ -1034,7 +1758,7 @@ interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plagi
 //if vbirde=1{
 if vbi=0{
 gosub *drawbackground
-clocka+=22666*20
+clocka+=22666
 gosub *drawforeground
 vbis=0//:gosub *bpsoundctlr
 interruptformt=1:functyper=2|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
@@ -2525,23 +3249,25 @@ emulatorexeci=1
 return
 
 *bpsoundctlr
+/*if beepenable=1{BeepIsDone:if stat=1{BeepPlay 2400, 0x7FFFFFFF}:BeepRestart}else{BeepPause}
+return*/
 goto bpsoundctrlptr(playingbeep=0)
 if playingbeep=0{
 if beepenable=1{
 playingbeep=1
-waveOutSine 2400,0.1,0.01
+;waveOutSine 2400,0.1,0.01
 //mmplay 0
 }else{waveOutPause hWaveOut@_WAVEOUT_M_}}else{if beepenable=0{waveOutPause hWaveOut@_WAVEOUT_M_:playingbeep=0}}
 return
 *bpsoundctlr_a
 if beepenable=1{
 playingbeep=1
-waveOutSine 2400,0.1,0.01
-//mmplay 0
-}else{waveOutPause hWaveOut@_WAVEOUT_M_}
+BeepIsDone:if stat=1{BeepPlay 2400, 0x7FFFFFFF}
+BeepRestart
+}else{BeepPause}
 return
 *bpsoundctlr_b
-if beepenable=0{waveOutPause hWaveOut@_WAVEOUT_M_:playingbeep=0}
+if beepenable=0{BeepPause:playingbeep=0}
 return
 
 *clkdownmvup
