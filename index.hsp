@@ -2623,7 +2623,7 @@ dialog fontidx*/
 if (attributedata&0x1)!0{if (attributedata&0x4)=0{if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}}:boxf ((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*8,(grpccnt/80)*8,((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*8+7,(grpccnt/80)*8+7}
 if attributedata&0x4{boxf ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8),((grpccnt/80)*8),((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8)+7,(((grpccnt/80)*8)+7):colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}
 if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}}}
-if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (gettine\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){/*boxf ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8),((grpccnt/80)*8),((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8)+7,(((grpccnt/80)*8)+7):*/colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}
+if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (gettine\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){if (attributedata&0x4)=4{boxf ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8),((grpccnt/80)*8),((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*8)+7,(((grpccnt/80)*8)+7)}:colourchanged=1:if crtmodectrl=0{palcolor bgcolor}else{palcolor 8}:palletedcolorchkold=256}
 pos ((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*8,(grpccnt/80)*8
 if attributedata&0x1{}else{
 fontrend fontid
@@ -2700,7 +2700,7 @@ dialog fontidx*/
 if (attributedata&0x1)!0{if (attributedata&0x4)=0{if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}}:hgrect ((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*16+7,int(16*(grpccnt/80))+8,0,16,16}
 if attributedata&0x4{hgrect ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*16)+7,int(16*(grpccnt/80))+8,0,16,16:colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}
 if cursx!-1 and cursy!-1{if (gettine\blinktimest(blinkingtime))<(blinktimest(blinkingtime)/2){if cursx=(grpccnt\80) and cursy=(grpccnt/80){colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}}}
-if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (gettine\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){/*hgrect ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*16)+7,((grpccnt/80)*16)+8,0,16,16:*/colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}
+if (attributedata&0x1)=0 and (attributedata&0x2)=2 and (gettine\(blinktimest(blinkingtime)*2))>((blinktimest(blinkingtime)*2)/4){if (attributedata&0x4)=4{hgrect ((int(double(0.5*((pc8001widthflag!0)+1))*(grpccnt\80)))*16)+7,((grpccnt/80)*16)+8,0,16,16}:colourchanged=1:if crtmodectrl=0{palcolor_hg bgcolor}else{palcolor_hg 8}:palletedcolorchkold=256}
 pos ((grpccnt\80)/(displaydispc3(pc8001widthflag|(colorgraphicmode<<1))+1))*16,int(16*(grpccnt/80))-1
 if attributedata&0x1{}else{
 fontrend_hg fontid
