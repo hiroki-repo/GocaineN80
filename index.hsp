@@ -1599,6 +1599,7 @@ sysfunclbl(28)=*sysfunc_z80stackpeek
 sysfunclbl(29)=*sysfunc_z80stackpoke
 sysfunclbl(30)=*sysfunc_subz80acs
 sysfunclbl(31)=*sysfunc_subz80acs2
+sysfunclbl(32)=*sysfunc_sound
 sysfunctyper=varptr(sysfunclbl)
 sdim plaginconfptr,256
 #ifdef formadgeinitfunc
@@ -3158,6 +3159,26 @@ return 0
 swbreak
 swend
 return
+*sysfunc_sound
+switch plaginconf(120,pluginid)
+case 0
+BeepPlay plaginconf(121,pluginid), plaginconf(122,pluginid), plaginconf(123,pluginid)
+return 0
+swbreak
+case 1
+BeepIsDone
+return stat
+swbreak
+case 2
+BeepRestart
+return 0
+swbreak
+case 3
+BeepPause
+return 0
+swbreak
+swend
+return -1
 
 *interruptlbl
 wparam2=wparam
