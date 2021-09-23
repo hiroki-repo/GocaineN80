@@ -1651,7 +1651,7 @@ gsel 5,0
 oncmd gosub *keydown,$100
 oncmd gosub *keyup,$101
 gsel 0,0
-		BeepIsDone:if stat=1{BeepPlay 2400, 0x7FFFFFFF}//t*l-100
+		BeepIsDone:if stat=1{BeepPlay 2400, 0x7FFFFFFF,-1}//t*l-100
 		BeepPause
 //oncmd gosub *interruptlbl,$113
 ;settimer hwnd,1,333,0
@@ -3285,7 +3285,7 @@ return
 *bpsoundctlr_a
 if beepenable=1{
 playingbeep=1
-BeepIsDone:if stat=1{BeepPlay 2400, 0x7FFFFFFF}
+BeepIsDone:if stat=1{BeepPlay 2400, 0x7FFFFFFF,-1}
 BeepRestart
 }else{BeepPause}
 return
