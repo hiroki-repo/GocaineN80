@@ -18,6 +18,218 @@
 #cfunc mktime "mktime" int
 #cfunc localtime "localtime" int
 #cfunc gmtime "gmtime" int
+
+/*
+
+HSP??R?[???o?b?N???W???[??
+HSP3.5 beta 3?????m?F
+?p?u???b?N?h???C?????
+CC0 1.0????C?Z???X?????(CC0??R?????Y?????? http://creativecommons.org/publicdomain/zero/1.0/deed.ja)
+
+
+?R?[???o?b?N??????
+makeclbkfunc p1,p2,3,p4
+p1=?????              ?R?[???o?b?N??????K?v??????n???????|?C???^(?T?u???[?`???????R?[???o?b?N??????|?C???^)????????
+p2=0~(0)               ?n????????????? (p2<=0???????????????)
+p3=???x????            ?R?[???o?b?N????????????T?u???[?`??????x??
+p4=0|1(0)              ??„‘o???K????? 0=stdcall 1=cdecl   p4??????????stdcall??????
+
+??????????????? (p2<=0) ??A??„‘o?????? lparam=NULL?A wparam=0 ??????
+????????????     (p2>0)  ??A??„‘o?????? lparam=???????o?b?t?@?A?h???X?A wparam=?????????? ??????
+?????????????m??G???[??? ??A??„‘o?????? lparam=NULL?A wparam=0 ??????
+
+?T?u???[?`???????????????? stat ????l???R?[???o?b?N????????l??????
+
+?????o?b?t?@??T?u???[?`?????????????????? (lparam?Awparam??l??ƒÖ????????)
+argclbkfunc ??????????ï??????A?????????????K?v??????Awparam?Alparam??l??j????????????
+
+
+lparam??wparam????????????ï
+argclbkfunc p1
+p1=?z??              ?????????ï???????^?z??
+
+?????????????^?z?????? p1 ?????????? (?????o?b?t?@????R?s?[??????)
+?R?[???o?b?N????????????T?u???[?`??????g?p???????????
+wparam ?? lparam ???ï?O??j???????????????„‘o?????????g?p???????????
+lparam ?? wparam ??`?F?b?N??s???????
+
+*/
+
+
+
+
+//???W???[??
+//-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|//
+#ifndef _modulemakeclbkfuncah_def_
+#define _modulemakeclbkfuncah_def_
+#module
+
+	#uselib "kernel32.dll"
+	#func VirtualProtect "VirtualProtect" sptr,int,int,var
+
+	#const  FUNCSIZE     22         //?}?V????????
+	#const  FUNCSIZEBYT  FUNCSIZE*4 //?}?V????????(?o?C?g)
+
+	#const  PAGE_EXECUTE_READWRITE  $00000040
+
+	#deffunc makeclbkfunc var p_bin, int numargs, label label_sub, int clmode,\
+	local hspctx,\
+	local int_numargs,\
+	local lbl_tmp,\
+	local int_tmp,\
+	local bin,\
+	local int_stat
+
+		lbl_tmp = label_sub  //?T?u???[?`?????x??
+		mref hspctx,68
+		int_numargs = numargs & $80003FFF
+		int_stat=stat        //stat????
+
+		//?e?[?u??????????m??
+		static_arr_str_bin(static_int_idx) = "" // ????? / ?v?f???
+		memexpand static_arr_str_bin(static_int_idx), FUNCSIZEBYT
+		p_bin = varptr(static_arr_str_bin(static_int_idx))
+
+		//?}?V????
+		dupptr bin, p_bin, FUNCSIZEBYT
+		bin(0)  = $BE56C031       , varptr(hspctx(9)), $B9044689, int_numargs , $8D530689
+		bin(5)  = $0000989E       , $7EC98500        , $E1C1511C, $13FF5102   , $04468959
+		bin(10) = $74C08559       , $FF0E890C        , $8F088C74, $E2FC8844   , $68C689F6
+		bin(15) = lpeek(lbl_tmp,0), $581C53FF        , $0574F685, $0453ff56   , $54838B58
+		bin(20) = $5B000002       , $0000C35E
+		if clmode==0 & int_numargs>0{
+			bin(FUNCSIZE-1) = $C25E | int_numargs << 18  //stdcall????????????????X?^?b?N????
+		}
+
+		static_int_idx++
+		VirtualProtect p_bin, FUNCSIZEBYT, PAGE_EXECUTE_READWRITE, int_tmp
+		return int_stat
+
+
+	#deffunc argclbkfunc array arr_int_args,\
+	local cln_arr_int_tmp
+
+		dupptr cln_arr_int_tmp, lparam, wparam*4
+		dim arr_int_args, wparam
+		memcpy arr_int_args, cln_arr_int_tmp, wparam*4
+		return
+
+#global
+
+#endif
+//???W???[?????????
+//-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|//
+
+
+
+//????T???v?????
+
+
+//?g?p??1
+/*
+dim bin,1
+makeclbkfunc bin,4,*raberu
+hikisuu=10,60,5,-100
+
+cls
+title "?????„‘o??"
+mes "????"+callfunc(hikisuu,bin,4)
+
+stop
+
+*raberu
+	if lparam{
+		argclbkfunc aaa//dupptr aaa,lparam,wparam*4
+		foreach aaa
+			mes "aaa("+cnt+")="+aaa.cnt
+		loop
+	}
+	mes "wparam="+wparam
+	mes "lparam="+lparam
+	return 56
+*/
+
+//-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|//
+
+
+//?g?p??2
+/*
+dim bin,5
+makeclbkfunc bin.0,2,*raberu
+makeclbkfunc bin.1,-1,*raberu
+makeclbkfunc bin.2,1,*raberu
+makeclbkfunc bin.3,0,*raberu
+makeclbkfunc bin.4,2,*raberu2
+hikisuu=2,3
+
+cls
+title "?????„‘o??2"
+mes "??2?p?????[?^(?????????)??e?X?g"
+
+foreach bin
+	mes ""+cnt+"??????"+callfunc(hikisuu,bin.cnt,2)
+loop
+
+stop
+
+*raberu
+	mes "wparam="+wparam
+	mes "lparam="+lparam
+	return 3
+
+*raberu2
+
+	argclbkfunc aaa//dupptr aaa,lparam,wparam*4
+	mes "?T?u???[?`?????????T?u???[?`?????„‘o??="+callfunc(aaa,bin.0,2)
+	return 2
+*/
+
+
+//-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|//
+
+//?g?p??3
+/*
+#uselib "user32.dll"
+#func EnumWindows   "EnumWindows"    sptr,int
+#func GetWindowText "GetWindowTextA" int,sptr,int
+
+sdim titlebuf,256
+sdim buf,10240
+i=0
+dim p_enumwindowsproc,1
+makeclbkfunc p_enumwindowsproc,2,*enumwindowsproc
+
+EnumWindows p_enumwindowsproc,2
+
+cls
+title "?E?B???h?E??^?C?g????"
+mesbox buf,ginfo_winx,ginfo_winy,4
+
+stop
+
+*enumwindowsproc
+	argclbkfunc enumwinp//dupptr enumwinp,lparam,wparam*4
+	GetWindowText enumwinp.0,varptr(titlebuf),256
+	if i: buf+="\n"
+	buf+=strf("%10d",enumwinp.0)+"=" +titlebuf
+	i++
+	return 1
+*/
+#uselib "z80dll.dll"
+#func global dll_z80init "z80init"
+#func global dll_DoIRQ "DoIRQ" int
+#func global dll_DoNMI "DoNMI"
+#func global dll_z80macset "z80macset" int
+#func global dll_z80run "z80run"
+#cfunc global dll_z80stackpeek "z80stackpeek" int
+#cfunc global dll_z80stackpoke "z80stackpoke" int,int
+
+if varptr(dll_z80macset)!0{
+dll_z80init
+makeclbkfunc clbk4dllz80, 3, *z80mac,1
+dll_z80macset clbk4dllz80
+}
+
 dim timexforch1,9
 timexforch1(0)=gettime(6),gettime(5),gettime(4),gettime(3),gettime(1)-1,gettime(0)-1909,0,0,0
 ldim oaeptr,2
@@ -1663,6 +1875,142 @@ blinktimest(0)=16,32,48,64
 gettine2=gettime(7)
 gettmex=gettine2
 gettmex2=gettime(6)
+if varptr(dll_z80macset)!0{
+vbi=1
+repeat//cnt*((((blinktimest(blinkingtime)/3)*3)-1)+16)*/:cntmaincs=0
+//gettine2=gettime(7)
+//gettine3=gettime(7)-(gettine2):gettine3+=1000*(gettine3<0)
+cntmain=0
+oprestruct=0
+//repeat 1000*1000*4:cntmain++//=cnt
+//abtime=gettime(6)
+beepenabletimex=gettime(7)
+repeat
+if clocka>=4000000{break}
+//if (cnt\2)=0{vbi=1}else{vbi=0}
+//gettme=gettime(7)-gettmex:gettme+=(1000*(gettme<0))//if gettme<0{gettme+=1000}
+interruptformt=1
+vbismacs=1
+emulatorexeci=0
+vbi=1
+//abtime=gettime(7)
+cnta=cnt
+repeat 66666*5:cntmain++//=cnt
+//gosub *bpsoundctlr
+vbi=((cntmain\2)=0)
+clockaold=clocka:clocka+=4:clocktmp=clocka-clockaold:dll_z80run
+//if (cntmain\32768)=0 and cntmain!0{gosub *bpsoundctlr}
+continue cnt+clocktmp//+1
+loop
+//dialog gettime(7)-abtime
+//stop
+vbi=0
+//repeat 8192:cntmain++//=cnt
+//cntmaincs=cnt\((blinktimest(blinkingtime)))
+//if cnt\18000=0{await}
+//z80run address,0:statx=stat
+//gosub *bpsoundctlr
+//continue cnt+z80run_c(address,0)//+1
+//if (gettine\2)=0{
+//if (gettme\16)>12{vbirde=1}else{vbirde=0}
+//if (gettme\16)=15{vbi=0}
+//if (gettme\16)>13 or (gettme\16)<2{
+//if (cntmain\30666)>30600{vbi=0}
+//if (cnt\30666)<(30000){
+//if (gettme\16)=0{
+//loop
+/*if (cntmain\32)>24{
+vbi=1
+}else{
+vbi=0
+}*/
+//vbi=1
+//}
+emulatorexeci=1
+vbismacs=0
+//interruptformt=0
+//gettine=gettime(7)-gettine2:gettine+=(1000*(gettine<0))
+//if (gettine\16)=0{vbi=(vbi=0)}
+//if (gettine\17)=8{vbi=(vbi=0)}
+/*if (gettine\2){
+if cntmain\32>24{
+vbi=1
+}else{
+vbi=0
+}
+
+}*/
+/*if (gettine\125)=0{
+/*if vbi=1{
+gosub *drawbackground
+gosub *drawforeground
+interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+await
+vbis=0
+}*/
+//gosub *bpsoundctlr
+//}
+/*if (gettine\150)=0{
+if vbi=1{
+gosub *drawbackground
+gosub *drawforeground
+vbis=0
+interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+}else{await}
+}*/
+
+//if (gettme\16)=0{
+//if (cnt\30666)=30000{
+//vbi=1
+//if cnt\((133330))>133300 and cntmain!0{
+//if vbirde=1{
+if vbi=0{
+gosub *drawbackground
+clocka+=22666
+gosub *drawforeground
+vbis=0//:gosub *bpsoundctlr
+interruptformt=1:functyper=2|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+vbirde=0
+}//else{await}
+/*gosub *drawbackground
+gosub *drawforeground*/
+//gosub *bpsoundctlr
+await
+//interruptformt=1:functyper=2|(0<<4):repeat plaginmax:gosub *bpsoundctlr:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+//await
+vbis=0
+//vbirde=0
+//}//else{if (gettme\16)<4{vbi=0}}
+interruptformt=1:functyper=0|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+//if (cnt\3)=2 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){if usejit=0{dll_DoIRQ 2*3}else{z80jitinterrupt address,2*3,0}}else{if (cnt\5)=4 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){if usejit=0{z80interrupt address,0,2*5}else{z80jitinterrupt address,2*5,0}}}
+vbi=0
+repeat 8192:cntmain++//=cnt
+clockaold=clocka:clocka+=4:clocktmp=clocka-clockaold:dll_z80run
+continue cnt+clocktmp//+1
+loop
+;gosub *bpsoundctlr
+loop
+clockab=clocka:beepenabletime=int(0.0006*clocka):clocka=0
+;dialog clockab
+//abtime=gettime(6)-abtime:if abtime<0{abtime+=60}
+//dialog str(abtime)
+if (interruptphb&1)!0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if varptr(dll_z80macset)!0{dll_DoIRQ 2*2}else{if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}}
+await
+interruptformt=0
+//gosub *drawforeground
+//if vbi=1{
+vbi=1
+//gosub *drawbackground
+//gosub *drawforeground
+//interruptformt=1:functyper=2|(0<<4):repeat plaginmax:if plaginconf(0,cnt)=1{if plaginconf(1,cnt)=functyper or plaginconf(2,cnt)=functyper or plaginconf(3,cnt)=functyper or plaginconf(4,cnt)=functyper or plaginconf(5,cnt)=functyper{}else{continue cnt+1}}else{continue cnt+1}:if lpeek(plaginptr(cnt),0)!0{memfile plaginconfptr:lpoke plaginconfptr,4*0,varptr(plaginconfptr):lpoke plaginconfptr,4*1,functyper:lpoke plaginconfptr,4*2,sysfunctyper:lpoke plaginconfptr,4*6,varptr(plaginconf(0,cnt)):pluginid=cnt:gosub plaginptr(cnt)}:loop:interruptformt=0
+//}
+emulatorexeci=1
+//dialog gettme
+//await
+loop
+end
+
+}else{
 if usejit!0{
 repeat
 z80jitrun address
@@ -1787,7 +2135,7 @@ clockab=clocka:beepenabletime=int(0.0006*clocka):clocka=0
 ;dialog clockab
 //abtime=gettime(6)-abtime:if abtime<0{abtime+=60}
 //dialog str(abtime)
-if (interruptphb&1)!0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}
+if (interruptphb&1)!0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if varptr(dll_z80macset)!0{dll_DoIRQ 2*2}else{if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}}
 await
 interruptformt=0
 //gosub *drawforeground
@@ -1802,6 +2150,7 @@ emulatorexeci=1
 //await
 loop
 end
+}
 }
 
 *drawforeground
@@ -1821,6 +2170,9 @@ return
 *oaemah
 dim oaeaddt,3:oaeaddt(0)=_z80_addr,_z80_data,_z80_accesstype:memfile oaeaddt
 goto oaearchptr
+*z80mac
+argclbkfunc argv_dll
+_z80_addr=argv_dll(0)&0xFFFF:_z80_data=argv_dll(1)&0xFF:_z80_accesstype=argv_dll(2)
 *memoryaccesshnd
 interruptformtmacbak=interruptformt:interruptformt=1
 //if z80jitfreezeblockerget()\16=0 or cntmain\16=0{
@@ -2579,7 +2931,7 @@ palletedcolorchkold=256
 cntmaincs+=((blinktimest(blinkingtime))-1)
 vbis=1
 if oprestruct=0{
-if (interruptphb&2)!0 and (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}
+if (interruptphb&2)!0 and (interruptix\2)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if varptr(dll_z80macset)!0{dll_DoIRQ 2*1}else{if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}}
 }
 if useoldrender=1{
 if graphicdraw=1{
@@ -2773,17 +3125,21 @@ if interruptformtk=1{interruptformt=0:interruptformtk=0}
 return
 
 *z80interruptioncall
+if varptr(dll_z80macset)!0{dll_DoIRQ plaginconf(120,pluginid)}else{
 if usejit=0{
 z80interrupt address,0,plaginconf(120,pluginid)
 }else{
 z80jitinterrupt address,plaginconf(120,pluginid),0
 }
+}
 return
 *z80nminterruptioncall
+if varptr(dll_z80macset)!0{dll_DoNMI }else{
 if usejit=0{
 z80nminterrupt address,0
 }else{
 z80jitnminterrupt address
+}
 }
 return
 *z80memoryget
@@ -3194,9 +3550,9 @@ interruptformt=1
 //gosub *bpsoundctlr
 //if (interruptix\2)=0 and (vbis=1) and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>0)){if vbismacs=1{if usejit=0{z80interrupt address,0,2*1}else{z80jitinterrupt address,2*1,0}}:vbis=0}
 if oprestruct=0{
-if (interruptphb&1)!0 and (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}
-if (interruptix\3)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){if usejit=0{z80interrupt address,0,2*3}else{z80jitinterrupt address,2*3,0}}
-if (interruptix\5)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){if usejit=0{z80interrupt address,0,2*5}else{z80jitinterrupt address,2*5,0}}
+if (interruptphb&1)!0 and (interruptix\100)=0 and (((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>1)){if varptr(dll_z80macset)!0{dll_DoIRQ 2*2}else{if usejit=0{z80interrupt address,0,2*2}else{z80jitinterrupt address,2*2,0}}}
+if (interruptix\3)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>2){if varptr(dll_z80macset)!0{dll_DoIRQ 2*3}else{if usejit=0{z80interrupt address,0,2*3}else{z80jitinterrupt address,2*3,0}}}
+if (interruptix\5)=0 and ((((interruptlevel>>3)&1)=1) or (interruptlevel&0x7)>4){if varptr(dll_z80macset)!0{dll_DoIRQ 2*5}else{if usejit=0{z80interrupt address,0,2*5}else{z80jitinterrupt address,2*5,0}}}
 if vbis=1{vbis=0}
 emulatorexeci=0
 interruptix+=1:if interruptix>=100{interruptix=0}
